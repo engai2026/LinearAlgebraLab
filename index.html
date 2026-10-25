@@ -1,0 +1,1341 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>LinearAlgebra Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: lab bench with four rooms (lab, practice, elimination, theory) behind tabs; plot left, instrument panel right */
+:root{
+  --bg:#f3f5f9;--panel:#ffffff;--ink:#141829;--muted:#596074;--faint:#868ca0;
+  --line:#dde1ea;--line2:#c3c9d6;--accent:#3443c4;--accent-bg:#e7e9fb;
+  --ok:#1d7442;--ok-bg:#e1f3e8;--bad:#b42318;--bad-bg:#fbe9e7;--grid:#e5e8ef;--axis:#a5acbd;--plane:#e39a1f;--hl:#fff2cc;
+  --v1:#5a4ed4;--v2:#0f8a72;--v3:#cf5226;--v4:#bf3876;--v5:#a8740c;
+  --display:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f121a;--panel:#171b26;--ink:#e7e9f1;--muted:#a1a7b8;--faint:#7a8094;
+  --line:#272d3c;--line2:#384055;--accent:#8e98ff;--accent-bg:#222852;
+  --ok:#72d49c;--ok-bg:#153424;--bad:#f97066;--bad-bg:#3a1b19;--grid:#222736;--axis:#4a5267;--plane:#e8a63a;--hl:#3a3218;
+  --v1:#9b91ff;--v2:#3ccaa5;--v3:#f2845c;--v4:#ef72aa;--v5:#e2b443;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f121a;--panel:#171b26;--ink:#e7e9f1;--muted:#a1a7b8;--faint:#7a8094;
+  --line:#272d3c;--line2:#384055;--accent:#8e98ff;--accent-bg:#222852;
+  --ok:#72d49c;--ok-bg:#153424;--bad:#f97066;--bad-bg:#3a1b19;--grid:#222736;--axis:#4a5267;--plane:#e8a63a;--hl:#3a3218;
+  --v1:#9b91ff;--v2:#3ccaa5;--v3:#f2845c;--v4:#ef72aa;--v5:#e2b443;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font:400 44px/1 var(--display);margin:0;letter-spacing:-0.01em}
+h1 em{color:var(--accent)}
+.sub{color:var(--muted);margin:6px 0 0;max-width:62ch}
+h2{font:500 12px/1.2 var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
+h3{font:400 24px/1.15 var(--display);margin:0;text-wrap:balance}
+button{font:500 13px/1 var(--body);color:var(--ink);background:var(--panel);border:1px solid var(--line2);border-radius:7px;padding:8px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+button:hover{border-color:var(--ink)}
+button:disabled{opacity:.45;cursor:default;border-color:var(--line2)}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select{font:500 13px var(--body);color:var(--ink);background:var(--panel);border:1px solid var(--line2);border-radius:7px;padding:6px 8px}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:9px;padding:3px;background:var(--panel)}
+.seg button{border:0;border-radius:6px;padding:7px 14px;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav.tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:12px 14px;font-size:14px;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.app{display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px;align-items:start}
+.panes{min-width:0;display:flex;flex-direction:column}
+nav.tabs{flex-direction:column;border-bottom:0;border-right:1px solid var(--line);position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);overflow:visible;padding-right:12px;gap:2px}
+nav.tabs button{justify-content:flex-start;text-align:left;border-bottom:0;border-left:2px solid transparent;border-radius:0 7px 7px 0;padding:9px 12px}
+nav.tabs button:hover{background:var(--panel)}
+nav.tabs button[aria-selected="true"]{border-left-color:var(--accent);background:var(--panel)}
+.navlbl{font:600 11px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--faint);padding:14px 14px 6px}
+.navlbl:first-child{padding-top:4px}
+@media (max-width:860px){.app{grid-template-columns:minmax(0,1fr);gap:16px}nav.tabs{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);position:static;padding-right:0}nav.tabs button{border-left:0;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap}nav.tabs button[aria-selected="true"]{border-bottom-color:var(--accent);background:none}.navlbl{display:none}}
+
+.lab{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:1150px){.lab{grid-template-columns:minmax(0,1fr)}}
+.plot{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}
+.plot svg{display:block;width:100%;height:auto;touch-action:none;user-select:none}
+.plotbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:4px 4px 10px}
+.hint{font-size:13px;color:var(--faint)}
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.block{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.matwrap{overflow-x:auto;display:flex;align-items:stretch;gap:4px;padding:2px 0}
+.br{width:8px;border:1.5px solid var(--muted);flex:none}
+.br.l{border-right:0}.br.r{border-left:0}
+.mat{border-collapse:collapse}
+.mat th{font:500 15px var(--mono);padding:2px 4px 6px}
+.mat td{padding:2px 3px}
+.mat td.rl{font:12px var(--mono);color:var(--faint);padding-right:6px}
+.mat input,.num{width:56px;height:32px;text-align:center;font:500 14px var(--mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px}
+.bad{border-color:var(--bad)!important}
+.err{font-size:13px;color:var(--bad);min-height:20px;margin:4px 0 2px}
+.picks{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.picks button{font:500 15px var(--mono);min-width:44px;justify-content:center}
+.picks button[aria-pressed="true"]{border-width:2px;border-color:currentColor}
+.eq{font:500 20px/1.3 var(--mono);margin:0 0 8px;overflow-wrap:anywhere}
+.how{font-size:14px;color:var(--muted);line-height:1.65}
+.how code,.mono{font:13px var(--mono);color:var(--ink)}
+.status{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font:500 13px/1 var(--body);padding:7px 11px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.pill.ok{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.pill.info{background:var(--accent-bg);color:var(--accent);border-color:transparent}
+.gram{border-collapse:collapse;font:13px var(--mono);font-variant-numeric:tabular-nums}
+.gram th{font-weight:500;padding:4px 8px}
+.gram td{padding:4px 8px;text-align:center;min-width:40px}
+.gram td.z{background:var(--ok-bg);color:var(--ok);border-radius:5px}
+.gram td.dg{color:var(--faint)}
+.scroll{overflow-x:auto}
+/* practice */
+.prac{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
+@media (max-width:1100px){.prac{grid-template-columns:minmax(0,1fr)}}
+.excard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.kind{font:500 12px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+.prompt{font-size:17px;line-height:1.6}
+.vecs{display:flex;flex-wrap:wrap;gap:8px 18px;font:500 16px var(--mono)}
+.answers{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.answers label{font:500 15px var(--mono);display:inline-flex;align-items:center;gap:6px}
+.fb{border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.65}
+.fb.ok{background:var(--ok-bg);color:var(--ok)}
+.fb.no{background:var(--bad-bg);color:var(--bad)}
+.fb .how{color:inherit}
+.hints{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.hints li{font-size:14px;color:var(--muted);border-left:2px solid var(--line2);padding:2px 0 2px 10px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--bg);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font:500 24px var(--mono);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button[aria-pressed="true"]{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
+/* elimination */
+.elim{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px;align-items:start}
+@media (max-width:1150px){.elim{grid-template-columns:minmax(0,1fr)}}
+.show{border-collapse:collapse;font:500 15px var(--mono);font-variant-numeric:tabular-nums}
+.show td{padding:6px 10px;text-align:center;min-width:46px;border-radius:5px}
+.show td.piv{background:var(--accent-bg);color:var(--accent)}
+.show tr.chg td{background:var(--hl)}
+.show tr.chg td.piv{background:var(--accent-bg)}
+.show th{font:500 13px var(--mono);padding:0 10px 4px;color:var(--muted)}
+.op{font:500 15px var(--mono);color:var(--accent);min-height:24px;overflow-wrap:anywhere}
+.deps{display:flex;flex-direction:column;gap:6px;font:500 14px var(--mono)}
+/* theory */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:14px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.note .alt{font:13px var(--mono);color:var(--faint)}
+.note p{margin:0;color:var(--muted);font-size:14px}
+.note p b{color:var(--ink);font-weight:500}
+.f{font:500 14px/1.6 var(--mono);color:var(--ink);background:var(--bg);border-radius:7px;padding:8px 10px;overflow-x:auto}
+.lbl{font:600 11px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--faint);display:block;margin-bottom:2px}
+.note .try{margin-top:auto;align-self:flex-start}
+.mini{display:inline-flex;align-items:stretch;gap:3px;vertical-align:middle;margin:2px 4px}
+.mini table{border-collapse:collapse;font:500 14px var(--mono);font-variant-numeric:tabular-nums}
+.mini td{padding:2px 7px;text-align:center;color:var(--ink)}
+.mini .br{width:6px}
+.steps{display:flex;flex-direction:column;gap:18px}
+.steps h4{font:400 21px/1.2 var(--display);margin:0 0 6px;color:var(--ink)}
+.steps .how{overflow-x:auto}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font:500 14px var(--mono);overflow-wrap:anywhere}
+input[type=range]{accent-color:var(--accent);flex:1;min-width:120px}
+.aug td.bar{border-left:1.5px solid var(--muted)}
+.sysrow td{padding:2px 2px;white-space:nowrap}
+.sysrow .var{font:500 14px var(--mono);color:var(--muted);padding:0 4px}
+.sysrow input{width:60px}
+.case{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.case .t{font:500 15px var(--body)}
+.subhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.subhead b{font:400 22px var(--display);margin-right:4px}
+.review{display:flex;flex-direction:column;gap:8px}
+.review details{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.review summary{cursor:pointer;font-size:14px}
+.timer{font:500 15px var(--mono);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <h1>LinearAlgebra <em>Lab</em></h1>
+    <p class="sub" data-en="Orthogonality, linear independence, rank and linear combinations. Explore them visually, practise with endless exercises, then go further into systems, subspaces, linear maps, eigenvalues and data, with every calculation shown step by step." data-es="Ortogonalidad, independencia lineal, rango y combinaciones lineales. Explóralos visualmente, practica con ejercicios infinitos y avanza hacia sistemas, subespacios, aplicaciones lineales, valores propios y datos, con cada cálculo paso a paso."></p>
+  </div>
+  <div class="seg" role="group" aria-label="Language / Idioma">
+    <button id="len" aria-pressed="true" onclick="setLang('en')">EN</button>
+    <button id="les" aria-pressed="false" onclick="setLang('es')">ES</button>
+  </div>
+</header>
+
+<div class="app">
+<nav class="tabs" role="tablist" aria-orientation="vertical">
+  <span class="navlbl" data-en="Learn" data-es="Aprender"></span>
+  <button role="tab" id="tab-lab" aria-selected="true" onclick="showTab('lab')" data-en="Lab" data-es="Laboratorio"></button>
+  <button role="tab" id="tab-practice" aria-selected="false" onclick="showTab('practice')" data-en="Practice" data-es="Ejercicios"></button>
+  <button role="tab" id="tab-theory" aria-selected="false" onclick="showTab('theory')" data-en="Theory" data-es="Teoría"></button>
+  <span class="navlbl" data-en="Tools" data-es="Herramientas"></span>
+  <button role="tab" id="tab-elimination" aria-selected="false" onclick="showTab('elimination')" data-en="Elimination in ℝⁿ" data-es="Eliminación en ℝⁿ"></button>
+  <button role="tab" id="tab-sys" aria-selected="false" onclick="showTab('sys')" data-en="Systems" data-es="Sistemas"></button>
+  <button role="tab" id="tab-sub" aria-selected="false" onclick="showTab('sub')" data-en="Subspaces" data-es="Subespacios"></button>
+  <button role="tab" id="tab-basis" aria-selected="false" onclick="showTab('basis')" data-en="Change of basis" data-es="Cambio de base"></button>
+  <button role="tab" id="tab-gs" aria-selected="false" onclick="showTab('gs')">Gram–Schmidt</button>
+  <button role="tab" id="tab-maps" aria-selected="false" onclick="showTab('maps')" data-en="Linear maps" data-es="Aplicaciones lineales"></button>
+  <button role="tab" id="tab-eig" aria-selected="false" onclick="showTab('eig')" data-en="Eigenvalues" data-es="Valores propios"></button>
+  <button role="tab" id="tab-data" aria-selected="false" onclick="showTab('data')" data-en="Data and AI" data-es="Datos e IA"></button>
+</nav>
+<div class="panes">
+
+<!-- LAB -->
+<section id="p-lab" class="lab">
+  <div class="plot">
+    <div class="plotbar">
+      <div class="seg" role="group" aria-label="Dimension">
+        <button id="m2" aria-pressed="true" onclick="setDim(2)">ℝ²</button>
+        <button id="m3" aria-pressed="false" onclick="setDim(3)">ℝ³</button>
+      </div>
+      <span class="hint" id="hint"></span>
+    </div>
+    <div class="row" id="presets" style="padding:0 4px 8px"></div>
+    <svg id="pl" viewBox="0 0 680 460" role="img" aria-label="Vectors plot">
+      <defs id="defs"></defs>
+      <g id="grid"></g><g id="spanG"></g><g id="ras"></g><g id="vecs"></g><g id="build"></g>
+      <text id="cap" x="16" y="448" style="font:12px var(--body);fill:var(--faint)"></text>
+    </svg>
+    <div class="status" id="status" style="padding:10px 4px 2px"></div>
+  </div>
+  <div class="side">
+    <div class="block">
+      <h2 data-en="Matrix A · one vector per column" data-es="Matriz A · un vector por columna"></h2>
+      <div class="matwrap"><span class="br l"></span><table class="mat" id="mat"></table><span class="br r"></span></div>
+      <div class="err" id="err" role="alert"></div>
+      <div class="row">
+        <button id="addc" onclick="addV()" data-en="+ Column" data-es="+ Columna"></button>
+        <button id="remc" onclick="remV()" data-en="− Column" data-es="− Columna"></button>
+        <button onclick="resetMode()" data-en="Reset" data-es="Restablecer"></button>
+        <button onclick="loadGS(d,S().V.map(v=>v.slice(0,d)),0)" data-en="Orthogonalize →" data-es="Ortogonalizar →"></button>
+      </div>
+    </div>
+    <div class="block">
+      <h2 data-en="Build a vector from the others" data-es="Construir un vector con los demás"></h2>
+      <div class="picks" id="picks"></div>
+      <p class="eq" id="eq"></p>
+      <div class="how" id="how"></div>
+      <div class="row" style="margin-top:12px"><button onclick="play()" data-en="▶ Replay" data-es="▶ Repetir"></button></div>
+    </div>
+    <div class="block">
+      <h2 data-en="Dot products AᵀA · green = orthogonal pair" data-es="Productos escalares AᵀA · verde = par ortogonal"></h2>
+      <div class="scroll"><table class="gram" id="gram"></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRACTICE -->
+<section id="p-practice" class="prac" hidden>
+  <div class="excard" id="excard"></div>
+  <div class="side">
+    <div class="block">
+      <h2 data-en="Your score" data-es="Tu puntuación"></h2>
+      <div class="stats">
+        <div class="stat"><b id="s-right">0</b><span data-en="correct" data-es="aciertos"></span></div>
+        <div class="stat"><b id="s-total">0</b><span data-en="attempted" data-es="intentados"></span></div>
+        <div class="stat"><b id="s-streak">0</b><span data-en="current streak" data-es="racha actual"></span></div>
+        <div class="stat"><b id="s-best">0</b><span data-en="best streak" data-es="mejor racha"></span></div>
+      </div>
+      <div class="how" id="weak" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:10px"><button onclick="resetScore()" data-en="Reset score" data-es="Reiniciar puntuación"></button></div>
+    </div>
+    <div class="block">
+      <h2 data-en="Exam mode" data-es="Modo examen"></h2>
+      <p class="how" style="margin:0 0 10px" data-en="A timed mix of the selected types, 2 minutes per question, no hints. You see the corrections at the end." data-es="Una mezcla cronometrada de los tipos seleccionados, 2 minutos por pregunta, sin pistas. Las correcciones se ven al final."></p>
+      <div class="row"><label for="exn" class="hint" data-en="Questions" data-es="Preguntas"></label><select id="exn"><option>5</option><option selected>10</option><option>15</option><option>20</option></select><button class="primary" onclick="startExam()" data-en="Start exam" data-es="Empezar examen"></button></div>
+    </div>
+    <div class="block">
+      <h2 data-en="Exercise types" data-es="Tipos de ejercicio"></h2>
+      <div class="chips" id="chips"></div>
+      <div class="err" id="chiperr"></div>
+      <div class="row"><button id="smartbtn" onclick="toggleSmart()"></button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ELIMINATION -->
+<section id="p-elimination" class="elim" hidden>
+  <div class="side">
+    <div class="block">
+      <h2 data-en="Vectors as columns" data-es="Vectores en columnas"></h2>
+      <div class="row" style="margin-bottom:10px">
+        <label for="er" class="hint" data-en="Dimension n" data-es="Dimensión n"></label><select id="er" onchange="resizeE()"></select>
+        <label for="ec" class="hint" data-en="Vectors" data-es="Vectores"></label><select id="ec" onchange="resizeE()"></select>
+      </div>
+      <div class="matwrap"><span class="br l"></span><table class="mat" id="emat"></table><span class="br r"></span></div>
+      <div class="err" id="eerr" role="alert"></div>
+      <p class="hint" style="margin:0 0 10px" data-en="Integers, decimals or fractions like 3/4." data-es="Enteros, decimales o fracciones como 3/4."></p>
+      <div class="row">
+        <button onclick="exampleE()" data-en="Example in ℝ⁴" data-es="Ejemplo en ℝ⁴"></button>
+        <button onclick="randomE()" data-en="Random" data-es="Aleatoria"></button>
+        <button onclick="clearE()" data-en="Clear" data-es="Vaciar"></button>
+      </div>
+    </div>
+    <div class="block">
+      <h2 data-en="Result" data-es="Resultado"></h2>
+      <div class="status" id="estatus" style="margin-bottom:12px"></div>
+      <div class="how" id="esum"></div>
+      <div class="row" style="margin-top:12px"><button onclick="elimToGS()" data-en="Orthogonalize with Gram–Schmidt →" data-es="Ortogonalizar con Gram–Schmidt →"></button></div>
+    </div>
+  </div>
+  <div class="block">
+    <h2 data-en="Gauss–Jordan elimination, step by step" data-es="Eliminación de Gauss–Jordan, paso a paso"></h2>
+    <p class="op" id="eop"></p>
+    <div class="matwrap" style="margin:8px 0 14px"><span class="br l"></span><table class="show" id="eshow"></table><span class="br r"></span></div>
+    <div class="row">
+      <button onclick="stepE(-999)" aria-label="First step">⏮</button>
+      <button onclick="stepE(-1)" data-en="← Previous" data-es="← Anterior"></button>
+      <span class="mono" id="ecount" style="min-width:70px;text-align:center"></span>
+      <button onclick="stepE(1)" class="primary" data-en="Next →" data-es="Siguiente →"></button>
+      <button onclick="stepE(999)" aria-label="Last step">⏭</button>
+    </div>
+    <p class="hint" style="margin:14px 0 0" data-en="Yellow rows changed in this step. Blue cells are pivots. Row operations never change which columns depend on which, so the final form shows the dependencies of the original vectors." data-es="Las filas amarillas cambian en este paso. Las celdas azules son pivotes. Las operaciones por filas no cambian qué columnas dependen de cuáles, así que la forma final muestra las dependencias de los vectores originales."></p>
+  </div>
+</section>
+
+<!-- GRAM-SCHMIDT -->
+<section id="p-gs" class="elim" hidden>
+  <div class="side">
+    <div class="block">
+      <h2 data-en="Vectors to orthogonalize" data-es="Vectores a ortogonalizar"></h2>
+      <div class="row" style="margin-bottom:10px">
+        <label for="gn" class="hint" data-en="Dimension n" data-es="Dimensión n"></label><select id="gn" onchange="resizeG()"></select>
+        <label for="gk" class="hint" data-en="Vectors" data-es="Vectores"></label><select id="gk" onchange="resizeG()"></select>
+      </div>
+      <div class="matwrap"><span class="br l"></span><table class="mat" id="gmat"></table><span class="br r"></span></div>
+      <div class="err" id="gerr" role="alert"></div>
+      <div class="row">
+        <button onclick="loadGS(2,[[3,1],[2,2]],0)" data-en="Example in ℝ²" data-es="Ejemplo en ℝ²"></button>
+        <button onclick="loadGS(3,[[1,1,0],[1,0,1],[0,1,1]],0)" data-en="Example in ℝ³" data-es="Ejemplo en ℝ³"></button>
+        <button onclick="randomG()" data-en="Random" data-es="Aleatorio"></button>
+      </div>
+    </div>
+    <div class="block">
+      <h2 data-en="Orthogonal vectors so far" data-es="Vectores ortogonales hasta ahora"></h2>
+      <div class="status" id="gstatus" style="margin-bottom:10px"></div>
+      <div class="deps" id="gres"></div>
+    </div>
+  </div>
+  <div class="block">
+    <h2 data-en="Gram–Schmidt, step by step" data-es="Gram–Schmidt, paso a paso"></h2>
+    <p class="op" id="gop"></p>
+    <svg id="gsvg" viewBox="0 0 680 460" role="img" aria-label="Gram–Schmidt plot" style="display:block;width:100%;height:auto;touch-action:none;user-select:none;margin:6px 0 10px">
+      <defs id="gdefs"></defs><g id="ggrid"></g><g id="gras"></g><g id="gvecs"></g>
+    </svg>
+    <p class="hint" id="gnovis" hidden data-en="There is no picture in ℝ⁴, but every step below works the same way." data-es="En ℝ⁴ no hay dibujo, pero cada paso funciona igual."></p>
+    <div class="row" style="margin-bottom:12px">
+      <button onclick="stepG(-999)" aria-label="First step">⏮</button>
+      <button onclick="stepG(-1)" data-en="← Previous" data-es="← Anterior"></button>
+      <span class="mono" id="gcount" style="min-width:70px;text-align:center"></span>
+      <button onclick="stepG(1)" class="primary" data-en="Next →" data-es="Siguiente →"></button>
+      <button onclick="stepG(999)" aria-label="Last step">⏭</button>
+      <span class="hint" id="ghint"></span>
+    </div>
+    <div class="how" id="ghow"></div>
+  </div>
+</section>
+
+<!-- LINEAR MAPS -->
+<section id="p-maps" class="lab" hidden>
+  <div class="plot">
+    <div class="row" id="mpresets" style="padding:4px 4px 10px"></div>
+    <svg id="msvg" viewBox="0 0 680 440" role="img" aria-label="Linear map plot" style="touch-action:none;user-select:none">
+      <defs id="mdefs"><clipPath id="mclip"><rect x="0" y="0" width="680" height="440"/></clipPath></defs>
+      <g id="mgrid0"></g>
+      <g clip-path="url(#mclip)"><g id="mgrid"></g><g id="mpar"></g><g id="meig"></g></g>
+      <g id="mvecs"></g>
+    </svg>
+    <div class="row" style="padding:10px 4px 4px">
+      <label for="mt" class="hint">t</label>
+      <input type="range" id="mt" min="0" max="1" step="0.01" value="1" oninput="mT=+this.value;drawMaps()">
+      <span class="mono" id="mtv" style="min-width:36px">1.00</span>
+      <button onclick="animMaps()" data-en="▶ Animate I → A" data-es="▶ Animar I → A"></button>
+    </div>
+    <p class="hint" style="margin:6px 4px 0" data-en="The faint grid is the original plane, the blue grid its image. Drag the tip of x. The slider blends from the identity (t = 0) to A (t = 1)." data-es="La cuadrícula tenue es el plano original y la azul su imagen. Arrastra la punta de x. El deslizador pasa de la identidad (t = 0) a A (t = 1)."></p>
+  </div>
+  <div class="side">
+    <div class="block">
+      <h2 data-en="Matrix A · columns are Ae₁ and Ae₂" data-es="Matriz A · las columnas son Ae₁ y Ae₂"></h2>
+      <div class="matwrap"><span class="br l"></span><table class="mat" id="mmat"></table><span class="br r"></span></div>
+      <div class="err" id="merr" role="alert"></div>
+      <div class="row"><button onclick="loadEig(MA.map(r=>r.map(x=>String(Math.round(x*1000)/1000))))" data-en="Eigenvalues step by step →" data-es="Valores propios paso a paso →"></button></div>
+    </div>
+    <div class="block">
+      <h2 data-en="The vector x" data-es="El vector x"></h2>
+      <div class="how" id="mx"></div>
+    </div>
+    <div class="block">
+      <h2 data-en="What A does" data-es="Qué hace A"></h2>
+      <p id="mclass" style="margin:0 0 12px;font-size:15px"></p>
+      <dl class="kv" id="minfo"></dl>
+    </div>
+  </div>
+</section>
+
+<!-- EIGEN -->
+<section id="p-eig" class="elim" hidden>
+  <div class="side">
+    <div class="block">
+      <h2 data-en="Square matrix A" data-es="Matriz cuadrada A"></h2>
+      <div class="row" style="margin-bottom:10px"><label for="eg-n" class="hint" data-en="Size" data-es="Tamaño"></label><select id="eg-n" onchange="resizeEig()"><option value="2">2 × 2</option><option value="3">3 × 3</option></select></div>
+      <div class="matwrap"><span class="br l"></span><table class="mat" id="egmat"></table><span class="br r"></span></div>
+      <div class="err" id="egerr" role="alert"></div>
+      <p class="hint" style="margin:0 0 10px" data-en="Integers, decimals or fractions like 3/4." data-es="Enteros, decimales o fracciones como 3/4."></p>
+      <div class="row" id="egpresets"></div>
+    </div>
+    <div class="block">
+      <h2 data-en="Quick checks" data-es="Comprobaciones rápidas"></h2>
+      <div class="how" id="egcheck"></div>
+    </div>
+  </div>
+  <div class="block">
+    <h2 data-en="Eigenvalues and diagonalization" data-es="Valores propios y diagonalización"></h2>
+    <div class="steps" id="egsteps"></div>
+  </div>
+</section>
+
+<!-- SYSTEMS -->
+<section id="p-sys" class="elim" hidden>
+  <div class="side">
+    <div class="block">
+      <h2 data-en="System of linear equations" data-es="Sistema de ecuaciones lineales"></h2>
+      <div class="row" style="margin-bottom:10px">
+        <label for="sy-m" class="hint" data-en="Equations" data-es="Ecuaciones"></label><select id="sy-m" onchange="resizeSys()"></select>
+        <label for="sy-n" class="hint" data-en="Unknowns" data-es="Incógnitas"></label><select id="sy-n" onchange="resizeSys()"></select>
+      </div>
+      <div class="scroll"><table class="mat" id="symat"></table></div>
+      <div class="err" id="syerr" role="alert"></div>
+      <p class="hint" style="margin:0 0 10px" data-en="Numbers, fractions, or expressions in the parameter a such as a, 2a+1, a^2 or 1-a." data-es="Números, fracciones o expresiones en el parámetro a como a, 2a+1, a^2 o 1-a."></p>
+      <div class="row" id="sypresets"></div>
+    </div>
+  </div>
+  <div class="block">
+    <h2 data-en="Rouché–Frobenius discussion and solution" data-es="Discusión por Rouché–Frobenius y solución"></h2>
+    <div class="steps" id="syout"></div>
+  </div>
+</section>
+
+<!-- SUBSPACES -->
+<section id="p-sub" class="elim" hidden>
+  <div class="side">
+    <div class="block">
+      <div class="row" style="margin-bottom:12px"><label for="sb-n" class="hint" data-en="Ambient space ℝⁿ, n =" data-es="Espacio ℝⁿ, n ="></label><select id="sb-n" onchange="resizeSub()"><option>2</option><option>3</option><option>4</option></select></div>
+      <div id="sbU"></div>
+      <div id="sbW" style="margin-top:18px"></div>
+      <div class="err" id="sberr" role="alert"></div>
+      <div class="row" id="sbpresets"></div>
+    </div>
+  </div>
+  <div class="block">
+    <h2 data-en="Bases, equations, sum and intersection" data-es="Bases, ecuaciones, suma e intersección"></h2>
+    <div class="steps" id="sbout"></div>
+  </div>
+</section>
+
+<!-- CHANGE OF BASIS -->
+<section id="p-basis" class="lab" hidden>
+  <div class="plot">
+    <div class="plotbar"><div class="row" id="cbpresets"></div><span class="hint" id="cbhint"></span></div>
+    <svg id="cbsvg" viewBox="0 0 680 440" role="img" aria-label="Change of basis plot" style="touch-action:none;user-select:none">
+      <defs id="cbdefs"><clipPath id="cbclip"><rect x="0" y="0" width="680" height="440"/></clipPath></defs>
+      <g id="cbgrid0"></g><g clip-path="url(#cbclip)" id="cbgrid"></g><g id="cbvecs"></g>
+    </svg>
+    <p class="hint" id="cbnovis" hidden data-en="The picture is drawn in ℝ². In ℝ³ every calculation still works." data-es="El dibujo es en ℝ². En ℝ³ todos los cálculos siguen funcionando."></p>
+  </div>
+  <div class="side">
+    <div class="block">
+      <div class="row" style="margin-bottom:10px"><label for="cb-n" class="hint" data-en="Dimension" data-es="Dimensión"></label><select id="cb-n" onchange="resizeCB()"><option>2</option><option>3</option></select></div>
+      <div id="cbin"></div>
+      <div class="err" id="cberr" role="alert"></div>
+    </div>
+    <div class="block">
+      <h2 data-en="Results" data-es="Resultados"></h2>
+      <div class="steps" id="cbout"></div>
+    </div>
+  </div>
+</section>
+
+<!-- DATA AND AI -->
+<section id="p-data" class="lab" hidden>
+  <div class="plot">
+    <div class="row" id="dpresets" style="padding:4px 4px 8px"></div>
+    <div class="chips" id="dtoggles" style="padding:0 4px 8px"></div>
+    <svg id="dsvg" viewBox="0 0 680 440" role="img" aria-label="Data plot" style="touch-action:none;user-select:none;cursor:crosshair">
+      <defs><clipPath id="dclip"><rect x="0" y="0" width="680" height="440"/></clipPath></defs>
+      <g id="dgrid"></g><g clip-path="url(#dclip)"><g id="dfit"></g></g><g id="dpts"></g>
+    </svg>
+    <div class="row" style="padding:10px 4px 2px"><button onclick="DP.pop();drawData()" data-en="Remove last point" data-es="Quitar el último punto"></button><button onclick="DP=[];drawData()" data-en="Clear" data-es="Vaciar"></button><span class="hint" data-en="Click to add a point, drag to move it." data-es="Haz clic para añadir un punto y arrástralo para moverlo."></span></div>
+  </div>
+  <div class="side">
+    <div class="block"><h2 data-en="Least squares line" data-es="Recta de mínimos cuadrados"></h2><div class="how" id="dls"></div></div>
+    <div class="block"><h2 data-en="Principal components (PCA)" data-es="Componentes principales (PCA)"></h2><div class="how" id="dpca"></div></div>
+    <div class="block"><h2 data-en="Why this matters for AI" data-es="Por qué importa en IA"></h2><p class="how" style="margin:0" data-en="Linear regression is exactly this least squares problem with more columns, one per feature. PCA compresses data by keeping the directions of largest variance, the top eigenvectors of the covariance matrix; it is used to reduce dimensions before training and to visualize embeddings. Both are special cases of the singular value decomposition (SVD)." data-es="La regresión lineal es exactamente este problema de mínimos cuadrados con más columnas, una por variable. PCA comprime los datos quedándose con las direcciones de mayor varianza, los vectores propios principales de la matriz de covarianza; se usa para reducir dimensiones antes de entrenar y para visualizar embeddings. Ambos son casos particulares de la descomposición en valores singulares (SVD)."></p></div>
+  </div>
+</section>
+
+<!-- THEORY -->
+<section id="p-theory" hidden>
+  <div class="chips" id="nfilter" style="margin-bottom:14px"></div>
+  <div class="notes" id="notes"></div>
+</section>
+</div>
+</div>
+</div>
+
+<script>
+const NS='http://www.w3.org/2000/svg',W=680;
+let lang='en';
+const T=(en,es)=>lang==='es'?es:en;
+const CV=['--v1','--v2','--v3','--v4','--v5'],NM=['u','v','w','x','y'];
+const col=i=>`var(${CV[i%5]})`;
+const $=id=>document.getElementById(id);
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
+const f=x=>{if(Math.abs(x)<1e-9)return'0';const s=(Math.round(x*100)/100).toString();return s.replace('-','−')};
+const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),nrm=a=>Math.sqrt(dot(a,a));
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const det2=(a,b)=>a[0]*b[1]-a[1]*b[0],det3=(a,b,c)=>dot(a,cross(b,c));
+const add=(a,b)=>a.map((x,i)=>x+b[i]),sc=(a,s)=>a.map(x=>x*s);
+const vs=v=>`(${v.map(f).join(', ')})`;
+const pad3=v=>[v[0]||0,v[1]||0,v[2]||0];
+function save(k,v){try{localStorage.setItem('spanlab-'+k,JSON.stringify(v))}catch(e){}}
+function load(k){try{return JSON.parse(localStorage.getItem('spanlab-'+k)||'null')}catch(e){return null}}
+function rankOf(L){const M=L.map(a=>a.slice());const m=M.length?M[0].length:0;let r=0;for(let c=0;c<m&&r<M.length;c++){let p=-1,b=1e-9;for(let i=r;i<M.length;i++)if(Math.abs(M[i][c])>b){b=Math.abs(M[i][c]);p=i}if(p<0)continue;[M[r],M[p]]=[M[p],M[r]];for(let i=0;i<M.length;i++)if(i!==r){const k=M[i][c]/M[r][c];for(let j=0;j<m;j++)M[i][j]-=k*M[r][j]}r++}return r}
+function basisOf(V,idx){const B=[];for(const i of idx)if(rankOf([...B,i].map(k=>V[k]))>B.length)B.push(i);return B}
+function combo(V,k){const w=V[k];if(nrm(w)<1e-9)return{t:0};const B=basisOf(V,V.map((_,i)=>i).filter(i=>i!==k));let co;
+ if(!B.length)return{t:-2};
+ if(B.length===3){const[a,b,c]=B.map(i=>V[i]),D=det3(a,b,c);return{t:3,B,D,co:[det3(w,b,c)/D,det3(a,w,c)/D,det3(a,b,w)/D]}}
+ if(B.length===2){const[a,b]=B.map(i=>V[i]),g11=dot(a,a),g12=dot(a,b),g22=dot(b,b),r1=dot(w,a),r2=dot(w,b),D=g11*g22-g12*g12;co=[(r1*g22-r2*g12)/D,(g11*r2-g12*r1)/D]}
+ else co=[dot(w,V[B[0]])/dot(V[B[0]],V[B[0]])];
+ let s=w.map(()=>0);B.forEach((i,j)=>s=add(s,sc(V[i],co[j])));if(nrm(add(s,sc(w,-1)))>1e-6)return{t:-1,B};return{t:B.length,B,co}}
+const term=(c,n,first)=>{if(Math.abs(c)<1e-9)return'';const s=f(Math.abs(c));const b=(s==='1'?'':s)+n;return first?(c<0?'−':'')+b:(c<0?' − ':' + ')+b};
+function comboStr(c,names){let s='';c.B.forEach((bi,j)=>s+=term(c.co[j],names[bi],s===''));return s||'0'}
+
+/* ================= LAB ================= */
+const DEF={2:{V:[[3,1,0],[-1,3,0],[2,4,0]],tgt:2},3:{V:[[2,0,1],[0,2,1],[2,2,2]],tgt:2}};
+const PRESETS={
+ 2:[['Orthogonal pair','Par ortogonal',[[3,0,0],[0,2,0]],1],['3 vectors in ℝ²','3 vectores en ℝ²',[[3,1,0],[-1,3,0],[2,4,0]],2],['One line','Una recta',[[2,1,0],[-2,-1,0],[4,2,0]],2],['Zero vector','Vector nulo',[[3,1,0],[0,0,0]],1]],
+ 3:[['Standard basis','Base canónica',[[1,0,0],[0,1,0],[0,0,1]],2],['Plane, rank 2','Plano, rango 2',[[2,0,1],[0,2,1],[2,2,2]],2],['Rank 3 + extra','Rango 3 + extra',[[2,0,0],[0,2,1],[1,-1,2],[3,1,3]],3],['Off the plane','Fuera del plano',[[1,0,0],[2,0,0],[0,1,2]],2]]};
+const EXTRA={2:[[2,-2,0],[-3,-1,0],[1,-3.5,0]],3:[[1,-1,2],[3,1,3],[-1,2,0]]};
+let d=2,ST=JSON.parse(JSON.stringify(DEF)),Tt=1,raf=null,yaw=-0.6,pitch=0.4,drag=-1,rot=null;
+const S=()=>ST[d];
+CV.forEach((c,i)=>{const m=mk('marker',{id:'ah'+i,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto'},$('defs'));const p=mk('path',{d:'M1 1L9 5L1 9Z'},m);p.style.fill=col(i)});
+let DR={dim:2,yaw:-0.6,pitch:0.4,mk:'ah',s:40};
+function P(p){const s=DR.s;if(DR.dim===2)return[340+p[0]*s,220-p[1]*s];const[x,y,z]=p,cy=Math.cos(DR.yaw),sy=Math.sin(DR.yaw),X=x*cy-y*sy,D=x*sy+y*cy;return[340+s*X,230-s*(z*Math.cos(DR.pitch)+D*Math.sin(DR.pitch))]}
+const labDR=()=>{DR={dim:d,yaw,pitch,mk:'ah',s:d===2?40:42}};
+function line(a,b,stroke,w,dash,p){const A=P(a),B=P(b),l=mk('line',{x1:A[0],y1:A[1],x2:B[0],y2:B[1],'stroke-width':w},p);l.style.stroke=stroke;if(dash)l.setAttribute('stroke-dasharray',dash);return l}
+function arrow(a,b,i,dash,p,w){const A=P(a),B=P(b),n=Math.hypot(B[0]-A[0],B[1]-A[1]);if(n<2)return;const e=[B[0]-(B[0]-A[0])/n*4,B[1]-(B[1]-A[1])/n*4];const l=mk('line',{x1:A[0],y1:A[1],x2:e[0],y2:e[1],'stroke-width':w||3,'stroke-linecap':'round','marker-end':`url(#${DR.mk}${i%5})`},p);l.style.stroke=col(i);if(dash)l.setAttribute('stroke-dasharray',dash)}
+function drawGrid(G0){if(!G0)labDR();const G=G0||$('grid');G.innerHTML='';
+ if(DR.dim===2){const X=Math.floor(330/DR.s),Y=Math.floor(215/DR.s);for(let i=-X;i<=X;i++)line([i,-Y-.5,0],[i,Y+.5,0],i?'var(--grid)':'var(--axis)',i?1:1.5,'',G);for(let j=-Y;j<=Y;j++)line([-X-.5,j,0],[X+.5,j,0],j?'var(--grid)':'var(--axis)',j?1:1.5,'',G);
+  [[-5,'−5'],[5,'5']].forEach(([v,t])=>{const p=P([v,0,0]);const e=mk('text',{x:p[0]-4,y:p[1]+16},G);e.textContent=t;e.style.cssText='font:11px var(--mono);fill:var(--faint)'});return}
+ for(let i=-4;i<=4;i++){line([i,-4,0],[i,4,0],'var(--grid)',1,'',G);line([-4,i,0],[4,i,0],'var(--grid)',1,'',G)}
+ [[[5,0,0],'x'],[[0,5,0],'y'],[[0,0,4.5],'z']].forEach(([a,t])=>{line([0,0,0],a,'var(--axis)',1.5,'',G);const p=P(sc(a,1.08));const e=mk('text',{x:p[0]-4,y:p[1]+4},G);e.textContent=t;e.style.cssText='font:12px var(--mono);fill:var(--muted)'})}
+function buildMat(){const V=S().V;let h='<tr><td></td>'+V.map((_,i)=>`<th style="color:${col(i)}">${NM[i]}</th>`).join('')+'</tr>';
+ for(let r=0;r<d;r++)h+=`<tr><td class="rl">${'xyz'[r]}</td>`+V.map((a,i)=>`<td><input id="c-${i}-${r}" type="number" step="${d===2?0.5:1}" data-i="${i}" data-r="${r}" value="${a[r]}" aria-label="${NM[i]} ${'xyz'[r]}"></td>`).join('')+'</tr>';
+ $('mat').innerHTML=h;
+ $('mat').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{const v=parseFloat(inp.value);if(inp.value===''||!isFinite(v)){inp.classList.add('bad');$('err').textContent=T('Enter a number in every cell.','Escribe un número en cada casilla.');return}inp.classList.remove('bad');if(!$('mat').querySelector('.bad'))$('err').textContent='';S().V[+inp.dataset.i][+inp.dataset.r]=v;Tt=1;draw()}));
+ $('addc').disabled=V.length>=5;$('remc').disabled=V.length<=1}
+function syncMat(){$('mat').querySelectorAll('input').forEach(inp=>{if(document.activeElement!==inp&&!inp.classList.contains('bad'))inp.value=Math.round(S().V[+inp.dataset.i][+inp.dataset.r]*100)/100})}
+function buildPicks(){$('picks').innerHTML=S().V.map((_,i)=>`<button style="color:${col(i)}" aria-pressed="${i===S().tgt}" onclick="pick(${i})">${NM[i]}</button>`).join('')}
+function buildPresets(){$('presets').innerHTML='';PRESETS[d].forEach(([en,es,V,t])=>{const b=document.createElement('button');b.textContent=T(en,es);b.onclick=()=>loadLab(d,V,t);$('presets').appendChild(b)});
+ $('hint').textContent=d===2?T('Drag the tips to move vectors','Arrastra las puntas para mover los vectores'):T('Drag the plot to rotate','Arrastra el gráfico para girarlo')}
+function draw(){
+ labDR();const{V,tgt}=S(),n=V.length,r=rankOf(V);
+ const SG=$('spanG');SG.innerHTML='';
+ if(r===1){const b=V.find(a=>nrm(a)>1e-9),e=sc(b,(d===2?14:6)/nrm(b));line(sc(e,-1),e,'var(--plane)',1.5,'5 5',SG)}
+ if(r===2&&d===3){const B=basisOf(V,V.map((_,i)=>i)),e1=sc(V[B[0]],1/nrm(V[B[0]]));let b=V[B[1]];b=add(b,sc(e1,-dot(b,e1)));const e2=sc(b,1/nrm(b));const pts=[[4,4],[4,-4],[-4,-4],[-4,4]].map(([s,t])=>P(add(sc(e1,s),sc(e2,t))));const pg=mk('polygon',{points:pts.join(' '),'stroke-width':1},SG);pg.style.cssText='fill:var(--plane);fill-opacity:.14;stroke:var(--plane)'}
+ const g=$('vecs');g.innerHTML='';$('ras').innerHTML='';const BG=$('build');BG.innerHTML='';
+ V.forEach((a,i)=>{const gg=mk('g',{opacity:i!==tgt&&n>2?0.5:1},g),tip=P(a),nn=nrm(a);
+  if(nn>1e-9){if(d===3)line([a[0],a[1],0],a,col(i),1,'2 3',gg);arrow([0,0,0],a,i,'',gg)}
+  if(d===2){const h=mk('circle',{cx:tip[0],cy:tip[1],r:12},gg);h.style.cssText=`fill:${col(i)};fill-opacity:.2;stroke:${col(i)};cursor:grab`;h.addEventListener('pointerdown',e=>{e.stopPropagation();drag=i;$('pl').setPointerCapture(e.pointerId)})}
+  const k=nn||1,o=d===2?[a[0]/k*20-5,-a[1]/k*20+5]:[7,-7];const t=mk('text',{x:tip[0]+o[0],y:tip[1]+o[1]},gg);t.textContent=NM[i];t.style.cssText=`font:500 15px var(--mono);fill:${col(i)}`});
+ for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const a=V[i],b=V[j],na=nrm(a),nb=nrm(b);if(na&&nb&&Math.abs(dot(a,b))<1e-9){const x=sc(a,.4/na),y=sc(b,.4/nb);const p=mk('path',{d:`M${P(x)}L${P(add(x,y))}L${P(y)}`,fill:'none','stroke-width':1.2},$('ras'));p.style.stroke='var(--ink)'}}
+ const c=combo(V,tgt),N=NM[tgt];let eq='',how='';
+ if(c.t===-2){eq=T(`${N} has nothing to be built from`,`${N} no se puede construir con nada`);how=T('All the other columns are zero. Add or edit a column.','Todas las demás columnas son nulas. Añade o edita una columna.')}
+ else if(c.t===0){eq=`${N} = 0`;how=T('The zero vector is 0 times anything, so any set that contains it is dependent.','El vector nulo es 0 por cualquier vector, así que todo conjunto que lo contenga es dependiente.')}
+ else if(c.t===-1){const L=c.B.length===1?T('a line','una recta'):T('a plane','un plano');eq=T(`${N} ∉ span of the others`,`${N} ∉ subespacio de los demás`);how=T(`The other vectors only span ${L}, and ${N} points out of it. Rank of the others: ${c.B.length}. With ${N}: ${c.B.length+1}.`,`Los demás vectores solo generan ${L}, y ${N} se sale de ahí. Rango de los demás: ${c.B.length}. Con ${N}: ${c.B.length+1}.`)}
+ else{const m=c.B.length;let p=[0,0,0];c.B.forEach((bi,j)=>{const t=Math.max(0,Math.min(Tt*m-j,1));if(t<=0)return;arrow(p,add(p,sc(V[bi],c.co[j]*t)),bi,'7 5',BG,2.2);p=add(p,sc(V[bi],c.co[j]))});
+  eq=`${N} = ${comboStr(c,NM)}`;const nb=c.B.map(i=>NM[i]);
+  if(m===1)how=T(`${N} lies on the line through ${nb[0]}, so it is ${nb[0]} scaled:`,`${N} está en la recta de ${nb[0]}, así que es ${nb[0]} escalado:`)+`<br><code>c = (${N}·${nb[0]}) / (${nb[0]}·${nb[0]}) = ${f(dot(V[tgt],V[c.B[0]]))} / ${f(dot(V[c.B[0]],V[c.B[0]]))} = ${f(c.co[0])}</code>`;
+  else if(m===2&&d===2){const A=V[c.B[0]],B=V[c.B[1]],D=det2(A,B);how=T(`Solve a·${nb[0]} + b·${nb[1]} = ${N} with Cramer's rule:`,`Resuelve a·${nb[0]} + b·${nb[1]} = ${N} con la regla de Cramer:`)+`<br><code>a = det[${N} ${nb[1]}] / det[${nb[0]} ${nb[1]}] = ${f(det2(V[tgt],B))} / ${f(D)} = ${f(c.co[0])}</code><br><code>b = det[${nb[0]} ${N}] / det[${nb[0]} ${nb[1]}] = ${f(det2(A,V[tgt]))} / ${f(D)} = ${f(c.co[1])}</code><br>`+T(`The dashed path walks ${f(c.co[0])}·${nb[0]}, then ${f(c.co[1])}·${nb[1]}, and lands on ${N}.`,`El camino discontinuo recorre ${f(c.co[0])}·${nb[0]}, luego ${f(c.co[1])}·${nb[1]}, y llega a ${N}.`)}
+  else if(m===2){how=T(`${N} lies in the plane spanned by ${nb[0]} and ${nb[1]}, so two coefficients are enough. They solve a·${nb[0]} + b·${nb[1]} = ${N}.`,`${N} está en el plano generado por ${nb[0]} y ${nb[1]}, así que bastan dos coeficientes. Resuelven a·${nb[0]} + b·${nb[1]} = ${N}.`)+(n===3?'<br>'+T('Quick test:','Prueba rápida:')+` <code>det[u v w] = ${f(det3(V[0],V[1],V[2]))}</code>. `+T('Zero means all three lie in one plane.','Cero significa que los tres están en un mismo plano.'):'')}
+  else{const sub=j=>nb.map((x,k)=>k===j?N:x).join(' ');how=T(`${nb.join(', ')} form a basis of ℝ³`,`${nb.join(', ')} forman una base de ℝ³`)+` (<code>det[${nb.join(' ')}] = ${f(c.D)}</code>), `+T("so Cramer's rule applies:",'así que se aplica la regla de Cramer:')+'<br>'+nb.map((x,j)=>`<code>${T('coef of','coef. de')} ${x} = det[${sub(j)}] / ${f(c.D)} = ${f(c.co[j])}</code>`).join('<br>')}}
+ $('eq').textContent=eq;$('how').innerHTML=how;
+ let h='<tr><th></th>'+V.map((_,i)=>`<th style="color:${col(i)}">${NM[i]}</th>`).join('')+'</tr>';
+ V.forEach((a,i)=>{h+=`<tr><th style="color:${col(i)}">${NM[i]}</th>`+V.map((b,j)=>{const x=dot(a,b);return`<td class="${i===j?'dg':Math.abs(x)<1e-9?'z':''}">${f(x)}</td>`}).join('')+'</tr>'});$('gram').innerHTML=h;
+ let orth=V.every(a=>nrm(a)>1e-9);for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(Math.abs(dot(V[i],V[j]))>1e-9)orth=false;
+ const ind=r===n,spans=T(['the origin','a line','a plane','all of ℝ³'],['el origen','una recta','un plano','todo ℝ³']);const spanTxt=d===2&&r===2?T('the whole plane','todo el plano'):spans[r];
+ $('status').innerHTML=`<span class="pill ${orth?'ok':''}">${orth?T('✓ Orthogonal set','✓ Conjunto ortogonal'):T('✗ Not orthogonal','✗ No ortogonal')}</span><span class="pill ${ind?'ok':''}">${ind?T('✓ Independent','✓ Independientes'):T('✗ Dependent','✗ Dependientes')}</span><span class="pill info">${T('rank','rango')} ${r} ${T('of','de')} ${n}</span>`;
+ $('cap').textContent=T(`Span: ${spanTxt}.`,`Subespacio generado: ${spanTxt}.`)+(d===2&&n>2?T(' In ℝ², 3 or more vectors are always dependent.',' En ℝ², 3 o más vectores siempre son dependientes.'):d===3&&n>3?T(' In ℝ³, 4 or more vectors are always dependent.',' En ℝ³, 4 o más vectores siempre son dependientes.'):'');
+ syncMat();save('lab',{d,ST,yaw,pitch})}
+function rebuild(){drawGrid();buildMat();buildPicks();draw()}
+function play(){if(raf)cancelAnimationFrame(raf);if(matchMedia('(prefers-reduced-motion: reduce)').matches){Tt=1;draw();return}const s=performance.now(),dur=d===3?1800:1400;const st=now=>{Tt=Math.min((now-s)/dur,1);draw();if(Tt<1)raf=requestAnimationFrame(st)};raf=requestAnimationFrame(st)}
+function pick(i){S().tgt=i;buildPicks();play()}
+function addV(){const V=S().V;if(V.length>=5)return;V.push((EXTRA[d][V.length-(d===2?2:3)]||[1,1,d===3?1:0]).slice());S().tgt=V.length-1;buildMat();buildPicks();play()}
+function remV(){const s=S();if(s.V.length<=1)return;s.V.pop();s.tgt=Math.min(s.tgt,s.V.length-1);$('err').textContent='';buildMat();buildPicks();Tt=1;draw()}
+function resetMode(){ST[d]=JSON.parse(JSON.stringify(DEF[d]));if(d===3){yaw=-0.6;pitch=0.4}$('err').textContent='';rebuild();play()}
+function setDim(n){d=n;$('m2').setAttribute('aria-pressed',n===2);$('m3').setAttribute('aria-pressed',n===3);$('pl').style.cursor=n===3?'grab':'default';$('err').textContent='';buildPresets();rebuild();play()}
+function loadLab(dim,V,t){ST[dim].V=V.map(v=>pad3(v).slice(0,3));ST[dim].tgt=Math.min(t,V.length-1);showTab('lab');setDim(dim)}
+const svg=$('pl');
+function svgPt(e){const r=svg.getBoundingClientRect(),k=W/r.width;return[(e.clientX-r.left)*k,(e.clientY-r.top)*k]}
+svg.addEventListener('pointerdown',e=>{if(d!==3)return;rot=[e.clientX,e.clientY,yaw,pitch];svg.setPointerCapture(e.pointerId);svg.style.cursor='grabbing'});
+svg.addEventListener('pointermove',e=>{
+ if(d===2&&drag>=0){const[x,y]=svgPt(e);let p=[(x-340)/40,(220-y)/40].map(v=>Math.round(v*2)/2);p[0]=Math.max(-8,Math.min(8,p[0]));p[1]=Math.max(-5,Math.min(5,p[1]));S().V[drag]=[p[0],p[1],0];Tt=1;draw()}
+ if(d===3&&rot){yaw=rot[2]-(e.clientX-rot[0])*0.01;pitch=Math.max(-1.4,Math.min(1.4,rot[3]+(e.clientY-rot[1])*0.01));drawGrid();draw()}});
+svg.addEventListener('pointerup',()=>{drag=-1;if(rot){rot=null;svg.style.cursor='grab'}});
+
+/* ================= PRACTICE ================= */
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const nz=(a,b)=>{let x;do x=ri(a,b);while(x===0);return x};
+const choice=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=ri(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+const TYPES=[
+ {id:'indep',en:'Independence',es:'Independencia'},
+ {id:'combo',en:'Linear combination',es:'Combinación lineal'},
+ {id:'orthk',en:'Find k: orthogonal',es:'Halla k: ortogonales'},
+ {id:'depk',en:'Find k: dependent',es:'Halla k: dependientes'},
+ {id:'orthset',en:'Orthogonal set?',es:'¿Conjunto ortogonal?'},
+ {id:'proj',en:'Projection',es:'Proyección'},
+ {id:'gs',en:'Gram–Schmidt step',es:'Paso de Gram–Schmidt'},
+ {id:'image',en:'Image of a vector',es:'Imagen de un vector'},
+ {id:'eig',en:'Eigenvalues 2×2',es:'Valores propios 2×2'},
+ {id:'eigvec',en:'Eigenvalue of a vector',es:'Valor propio de un vector'},
+ {id:'rouche',en:'Classify a system',es:'Clasificar un sistema'},
+ {id:'solve',en:'Solve a system',es:'Resolver un sistema'},
+ {id:'implicit',en:'Implicit equation of a plane',es:'Ecuación implícita de un plano'},
+ {id:'coords',en:'Coordinates in a basis',es:'Coordenadas en una base'}];
+let enabled=load('types4')||TYPES.map(t=>t.id),EX=null,score=load('score')||{right:0,total:0,streak:0,best:0};
+function vecLine(V,names){return V.map((v,i)=>`<span style="color:${col(i)}">${names[i]} = ${vs(v)}</span>`).join('')}
+let STATS=load('stats')||{},SMART=load('smart')??true,EXAM=null,EXAMDONE=null,EXT=null;
+function pickType(){const pool=enabled.length?enabled:TYPES.map(t=>t.id);if(!SMART)return choice(pool);const w=pool.map(id=>{const s=STATS[id]||{r:0,t:0};return 1+4*(1-(s.r+1)/(s.t+2))});let r=Math.random()*w.reduce((a,b)=>a+b,0);for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0)return pool[i]}return pool[pool.length-1]}
+function gen(){EX=makeEx(pickType());renderEx()}
+function makeEx(type){let e;
+ if(type==='indep'){const dim=choice([2,3]),n=dim===2?choice([2,2,3]):choice([2,3,3,4]);let dep=n>dim||Math.random()<.5;const k=Math.min(n,dim);let V;
+  do{V=[];for(let i=0;i<k;i++)V.push(Array.from({length:dim},()=>ri(-3,3)))}while(rankOf(V)<k);
+  if(dep&&n<=dim){let w;do{const cs=V.slice(0,k-1).map(()=>ri(-2,2));w=V.slice(0,k-1).reduce((s,v,i)=>add(s,sc(v,cs[i])),Array(dim).fill(0))}while(nrm(w)<1e-9||w.some(x=>Math.abs(x)>9));V[k-1]=w}
+  while(V.length<n)V.push(Array.from({length:dim},()=>ri(-3,3)));
+  V=shuffle(V);e={type,dim,V,ans:rankOf(V)===n}}
+ if(type==='combo'){let u,v;do{u=[ri(-3,3),ri(-3,3)];v=[ri(-3,3),ri(-3,3)]}while(Math.abs(det2(u,v))<1);const a=nz(-3,3),b=nz(-3,3);e={type,V:[u,v,add(sc(u,a),sc(v,b))],ans:[a,b]}}
+ if(type==='orthk'){let u,v,k,j;do{j=ri(0,2);const t=choice([1,-1,2,-2,3]);u=[ri(-4,4),ri(-4,4),ri(-4,4)];v=[ri(-4,4),ri(-4,4),ri(-4,4)];v[j]=t;u[j]=0;const s=dot(u,v);k=-s/t}while(!Number.isInteger(k)||Math.abs(k)>9||nrm(u)<1e-9);e={type,u,v,j,ans:[k]}}
+ if(type==='depk'){let p,q,r,k,j;do{p=nz(-4,4);q=nz(-4,4);k=nz(-6,6);r=q*k/p}while(!Number.isInteger(r)||Math.abs(r)>12);j=ri(0,1);e={type,u:j?[p,q]:[q,p],v:j?[k,r]:[r,k],j,ans:[k]}}
+ if(type==='orthset'){const base=choice([[[1,1,0],[1,-1,0],[0,0,1]],[[1,2,2],[2,1,-2],[2,-2,1]],[[1,1,1],[1,-1,0],[1,1,-2]],[[2,1,0],[-1,2,0],[0,0,3]],[[1,0,1],[1,0,-1],[0,2,0]]]);
+  const perm=shuffle([0,1,2]),sg=[choice([1,-1]),choice([1,-1]),choice([1,-1])];let V=base.map(v=>perm.map((pi,i)=>v[pi]*sg[i]*1)).map(v=>sc(v,choice([1,1,2])));
+  let ans=true;if(Math.random()<.5){do{const i=ri(0,2),c=ri(0,2);V=V.map(x=>x.slice());V[i][c]+=choice([1,-1])}while(Math.abs(dot(V[0],V[1]))<1e-9&&Math.abs(dot(V[0],V[2]))<1e-9&&Math.abs(dot(V[1],V[2]))<1e-9||V.some(v=>nrm(v)<1e-9));ans=false}
+  e={type,V:shuffle(V),ans}}
+ if(type==='proj'){const dim=choice([2,3]);let u,w,c;for(;;){const half=Math.random()<.3,b=Array.from({length:dim},()=>ri(-3,3));if(nrm(b)<1e-9)continue;u=half?sc(b,2):b;c=half?choice([.5,-.5]):choice([1,-1,2,-2,3]);
+   const p=dim===2?sc([-b[1],b[0]],ri(-2,2)):cross(b,[ri(-2,2),ri(-2,2),ri(-2,2)]);w=add(sc(u,c),p);if(w.some(x=>Math.abs(x)>12)||nrm(p)<1e-9)continue;break}
+  e={type,dim,u,w,ans:[c]}}
+ if(type==='gs'){const dim=choice([2,3]);let u1,p,v2;for(;;){u1=Array.from({length:dim},()=>ri(-3,3));if(nrm(u1)<1e-9)continue;p=dim===2?sc([-u1[1],u1[0]],nz(-2,2)):cross(u1,[ri(-2,2),ri(-2,2),ri(-2,2)]);if(nrm(p)<1e-9)continue;
+   const g=p.reduce((a,x)=>gcd(a,x),0);p=p.map(x=>x/g);v2=add(sc(u1,choice([1,-1,2,-2])),p);if(v2.some(x=>Math.abs(x)>12))continue;break}
+  e={type,dim,V:[u1,v2],ans:p}}
+ if(type==='image'){const n=choice([2,3]);const A=Array.from({length:n},()=>Array.from({length:n},()=>ri(-3,3)));let v;do v=Array.from({length:n},()=>ri(-3,3));while(nrm(v)<1e-9);e={type,n,A,v,ans:A.map(r=>dot(r,v))}}
+ if(type==='eig'||type==='eigvec'){const n=type==='eig'?2:choice([2,3]);let A,P,L;for(;;){({P,Pi:L}=unimod(n));const lams=shuffle([-3,-2,-1,0,1,2,3,4,5]).slice(0,n);A=mm(mm(P,lams.map((l,i)=>lams.map((_,j)=>i===j?l:0))),L);if(A.flat().some(x=>Math.abs(x)>(n===2?9:12))||A.every((r,i)=>r.every((x,j)=>i===j||x===0)))continue;e={type,n,A,lams};break}
+  if(type==='eig')e.ans=e.lams.slice();else{const j=ri(0,n-1);e.v=P.map(r=>r[j]);e.ans=[e.lams[j]]}}
+ if(type==='rouche'){const kind=choice(['SCD','SCI','SI']);let A,b;for(;;){if(kind==='SCD'){A=Array.from({length:3},()=>Array.from({length:3},()=>ri(-3,3)));if(rankOf(A)<3)continue;b=Array.from({length:3},()=>ri(-5,5));break}
+   const r1=Array.from({length:3},()=>ri(-3,3)),r2=Array.from({length:3},()=>ri(-3,3));if(rankOf([r1,r2])<2)continue;const al=ri(-2,2),be=ri(-2,2);if(!al&&!be)continue;const r3=add(sc(r1,al),sc(r2,be)),b1=ri(-5,5),b2=ri(-5,5),b3=al*b1+be*b2+(kind==='SI'?nz(-3,3):0);if(r3.some(x=>Math.abs(x)>9)||Math.abs(b3)>15||nrm(r3)<1e-9)continue;const ord=shuffle([0,1,2]),R=[r1,r2,r3],B=[b1,b2,b3];A=ord.map(i=>R[i]);b=ord.map(i=>B[i]);break}
+  e={type,A,b,ans:kind}}
+ if(type==='solve'){const n=choice([2,3]);let A,x,b;for(;;){A=Array.from({length:n},()=>Array.from({length:n},()=>ri(-3,3)));if(rankOf(A)<n)continue;x=Array.from({length:n},()=>ri(-3,3));b=A.map(r=>dot(r,x));if(b.some(v=>Math.abs(v)>15))continue;break}e={type,n,A,b,ans:x}}
+ if(type==='implicit'){let u,v,c;for(;;){u=[ri(-3,3),ri(-3,3),ri(-3,3)];v=[ri(-3,3),ri(-3,3),ri(-3,3)];c=cross(u,v);if(nrm(c)<1e-9)continue;const g=c.reduce((a,x)=>gcd(a,x),0);c=c.map(x=>x/g);break}e={type,V:[u,v],ans:c}}
+ if(type==='coords'){const B=unimod(2).P;let c;do c=[ri(-3,3),ri(-3,3)];while(!c[0]&&!c[1]);e={type,B,v:B.map(r=>dot(r,c)),ans:c}}
+ e.state='open';e.hints=0;e.msg='';return e}
+const sysLines=(A,b)=>A.map((r,i)=>`<code>${linStr(F(0),r.map(x=>F(x)),VARS)} = ${f(b[i])}</code>`).join('<br>');
+const mm=(A,B)=>A.map(r=>B[0].map((_,j)=>r.reduce((s,x,k)=>s+x*B[k][j],0)));
+function unimod(n){const L=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:i>j?ri(-1,1):0)),U=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:j>i?ri(-1,2):0)),P=mm(L,U);return{P,Pi:invF(P.map(r=>r.map(x=>F(x)))).map(r=>r.map(fnum))}}
+function openLabel(e){if(e.type==='rouche'||e.type==='solve')return T('Open in systems','Abrir en sistemas');if(e.type==='implicit')return T('Open in subspaces','Abrir en subespacios');if(e.type==='coords')return T('Open in change of basis','Abrir en cambio de base');if(['proj','gs'].includes(e.type))return T('Open in Gram–Schmidt','Abrir en Gram–Schmidt');if(e.type==='image')return e.n===2?T('Open in linear maps','Abrir en aplicaciones lineales'):'';if(e.type==='eig'||e.type==='eigvec')return T('Open in eigenvalues','Abrir en valores propios');return T('Open in the lab','Abrir en el laboratorio')}
+function kindName(t){const x=TYPES.find(y=>y.id===t);return T(x.en,x.es)}
+function exText(e){
+ const nm=NM;
+ if(e.type==='indep')return{prompt:T(`Are these vectors in ℝ${e.dim===2?'²':'³'} linearly independent?`,`¿Son linealmente independientes estos vectores de ℝ${e.dim===2?'²':'³'}?`),vec:vecLine(e.V,nm),choices:[[true,T('Independent','Independientes')],[false,T('Dependent','Dependientes')]],
+  hints:[T('Put the vectors as the columns of a matrix A.','Coloca los vectores como columnas de una matriz A.'),e.V.length>e.dim?T(`There are ${e.V.length} vectors in ℝ${e.dim===2?'²':'³'}. How many independent vectors fit there?`,`Hay ${e.V.length} vectores en ℝ${e.dim===2?'²':'³'}. ¿Cuántos independientes caben ahí?`):e.V.length===e.dim?T('The matrix is square: compute det A. Nonzero means independent.','La matriz es cuadrada: calcula det A. Distinto de cero significa independientes.'):T('Not square: reduce A and count pivots. Independent means one pivot per column.','No es cuadrada: reduce A y cuenta pivotes. Independientes significa un pivote por columna.')]};
+ if(e.type==='combo'){const[u,v,w]=e.V;return{prompt:T('Find a and b such that w = a·u + b·v.','Halla a y b tales que w = a·u + b·v.'),vec:vecLine(e.V,nm),inputs:['a','b'],
+  hints:[T('Write it as a system, one equation per coordinate:','Plantea un sistema, una ecuación por coordenada:')+`<br><code>${f(u[0])}a + ${f(v[0])}b = ${f(w[0])}</code><br><code>${f(u[1])}a + ${f(v[1])}b = ${f(w[1])}</code>`,T('Compute the determinant of the coefficient matrix:','Calcula el determinante de la matriz de coeficientes:')+` <code>det[u v] = ${f(u[0])}·${f(v[1])} − ${f(u[1])}·${f(v[0])} = ${f(det2(u,v))}</code>`,T("Cramer's rule: replace the column you solve for with w.",'Regla de Cramer: sustituye la columna de la incógnita por w.')+` <code>a = det[w v] / det[u v] = ${f(det2(w,v))} / ${f(det2(u,v))}</code>`]}}
+ if(e.type==='orthk'){const us=e.u.map((x,i)=>i===e.j?'k':f(x));return{prompt:T('Find k so that u and v are orthogonal.','Halla k para que u y v sean ortogonales.'),vec:`<span style="color:${col(0)}">u = (${us.join(', ')})</span><span style="color:${col(1)}">v = ${vs(e.v)}</span>`,inputs:['k'],
+  hints:[T('Orthogonal means u · v = 0.','Ortogonales significa u · v = 0.'),T('Multiply coordinate by coordinate and add:','Multiplica coordenada a coordenada y suma:')+` <code>u · v = ${e.u.map((x,i)=>i===e.j?`${f(e.v[i])}k`:`(${f(x)})(${f(e.v[i])})`).join(' + ')}</code>`,T('Simplify:','Simplifica:')+` <code>${f(dot(e.u,e.v))} + ${f(e.v[e.j])}k = 0</code>`]}}
+ if(e.type==='depk'){const vsx=e.v.map((x,i)=>(i===0)===(e.j===1)?'k':f(x));return{prompt:T('Find k so that u and v are linearly dependent.','Halla k para que u y v sean linealmente dependientes.'),vec:`<span style="color:${col(0)}">u = ${vs(e.u)}</span><span style="color:${col(1)}">v = (${vsx.join(', ')})</span>`,inputs:['k'],
+  hints:[T('Two vectors in ℝ² are dependent exactly when det[u v] = 0.','Dos vectores de ℝ² son dependientes exactamente cuando det[u v] = 0.'),T('Write the determinant with k:','Escribe el determinante con k:')+` <code>det = ${f(e.u[0])}·${vsx[1]} − ${f(e.u[1])}·${vsx[0]}</code>`,T('Alternative: dependent means the coordinates are proportional, so the ratios must match.','Alternativa: dependientes significa coordenadas proporcionales, así que los cocientes deben coincidir.')]}}
+ if(e.type==='orthset')return{prompt:T('Is this an orthogonal set?','¿Es un conjunto ortogonal?'),vec:vecLine(e.V,nm),choices:[[true,T('Yes, orthogonal','Sí, ortogonal')],[false,T('No','No')]],
+  hints:[T('Check every pair: u·v, u·w and v·w.','Comprueba cada par: u·v, u·w y v·w.'),T('A single nonzero dot product is enough to answer no.','Basta un producto escalar distinto de cero para responder que no.')]};
+ if(e.type==='proj')return{prompt:T('Find c so that the orthogonal projection of w onto u is proj_u(w) = c·u.','Halla c para que la proyección ortogonal de w sobre u sea proj_u(w) = c·u.'),vec:vecLine([e.u,e.w],['u','w']),inputs:['c'],
+  hints:[T('Formula:','Fórmula:')+' <code>c = (w·u) / (u·u)</code>',`<code>w·u = ${f(dot(e.w,e.u))}</code>, <code>u·u = ${f(dot(e.u,e.u))}</code>`,T('Fractions are fine: type 1/2 if you need to.','Valen fracciones: escribe 1/2 si hace falta.')]};
+ if(e.type==='gs'){const[u1,v2]=e.V;return{prompt:T('Apply Gram–Schmidt to v₁, v₂. With u₁ = v₁, find u₂ = (x, y'+(e.dim===3?', z':'')+').','Aplica Gram–Schmidt a v₁, v₂. Con u₁ = v₁, halla u₂ = (x, y'+(e.dim===3?', z':'')+').'),vec:vecLine(e.V,['v₁','v₂']),inputs:['x','y','z'].slice(0,e.dim),
+  hints:[T('Coefficient:','Coeficiente:')+` <code>c = (v₂·u₁) / (u₁·u₁) = ${f(dot(v2,u1))} / ${f(dot(u1,u1))}</code>`,T('Then subtract:','Después resta:')+' <code>u₂ = v₂ − c·u₁</code>',T('Check your answer: u₂·u₁ must be 0.','Comprueba tu respuesta: u₂·u₁ debe dar 0.')]}}
+ const colsOf=A=>A[0].map((_,j)=>A.map(r=>r[j]));
+ if(e.type==='image'){const xyz=['x','y','z'].slice(0,e.n);return{prompt:T(`Compute A·v = (${xyz.join(', ')}).`,`Calcula A·v = (${xyz.join(', ')}).`),vec:`<span>A = ${matHTML(e.A)}</span><span style="color:${col(2)}">v = ${vs(e.v)}</span>`,inputs:xyz,
+  hints:[T('A·v is a combination of the columns of A, weighted by the coordinates of v:','A·v es una combinación de las columnas de A, con las coordenadas de v como pesos:')+` <code>${colsOf(e.A).map((c,j)=>`${f(e.v[j])}·${vs(c)}`).join(' + ')}</code>`,T('Or row by row: coordinate i of A·v is (row i of A) · v.','O fila a fila: la coordenada i de A·v es (fila i de A) · v.')]}}
+ if(e.type==='eig'){const tr=e.A[0][0]+e.A[1][1],dt=e.A[0][0]*e.A[1][1]-e.A[0][1]*e.A[1][0];return{prompt:T('Find the eigenvalues of A, in any order.','Halla los valores propios de A, en cualquier orden.'),vec:`<span>A = ${matHTML(e.A)}</span>`,inputs:['λ₁','λ₂'],
+  hints:['<code>|A − λI| = λ² − (tr A)·λ + det A</code>',`<code>tr A = ${f(tr)}</code>, <code>det A = ${f(dt)}</code>`,T('Look for two numbers whose sum is tr A and whose product is det A.','Busca dos números cuya suma sea tr A y cuyo producto sea det A.')]}}
+ if(e.type==='eigvec')return{prompt:T('v is an eigenvector of A. Find its eigenvalue λ.','v es un vector propio de A. Halla su valor propio λ.'),vec:`<span>A = ${matHTML(e.A)}</span><span style="color:${col(2)}">v = ${vs(e.v)}</span>`,inputs:['λ'],
+  hints:[T('Compute A·v.','Calcula A·v.'),T('A·v = λ·v, so divide any nonzero coordinate of A·v by the same coordinate of v.','A·v = λ·v, así que divide cualquier coordenada no nula de A·v entre la misma coordenada de v.')]};
+ if(e.type==='rouche')return{prompt:T('Classify this system using Rouché–Frobenius.','Clasifica este sistema con Rouché–Frobenius.'),vec:`<div>${sysLines(e.A,e.b)}</div>`,choices:[['SCD',T('Unique solution (SCD)','Compatible determinado (SCD)')],['SCI',T('Infinitely many (SCI)','Compatible indeterminado (SCI)')],['SI',T('No solution (SI)','Incompatible (SI)')]],
+  hints:[T('Write the augmented matrix A* = (A | b) and reduce it.','Escribe la matriz ampliada A* = (A | b) y redúcela.'),T('Compare rank A, rank A* and the number of unknowns, 3.','Compara rango A, rango A* y el número de incógnitas, 3.'),T('Shortcut: if |A| ≠ 0 the system is SCD. Here','Atajo: si |A| ≠ 0 el sistema es SCD. Aquí')+` <code>|A| = ${f(det3(...e.A))}</code>.`]};
+ if(e.type==='solve')return{prompt:T('Solve the system.','Resuelve el sistema.'),vec:`<div>${sysLines(e.A,e.b)}</div>`,inputs:VARS.slice(0,e.n),
+  hints:[T('Use Gauss: eliminate one unknown at a time.','Usa Gauss: elimina una incógnita cada vez.'),`<code>|A| = ${f(e.n===2?det2(e.A[0],e.A[1]):det3(...e.A))}</code> ≠ 0. `+T("Cramer: each unknown = |A with its column replaced by b| / |A|.",'Cramer: cada incógnita = |A con su columna cambiada por b| / |A|.'),T('Check your answer by substituting it into every equation.','Comprueba tu respuesta sustituyéndola en cada ecuación.')]};
+ if(e.type==='implicit')return{prompt:T('Find an implicit equation ax + by + cz = 0 of the plane spanned by u and v. Any valid equation is accepted.','Halla una ecuación implícita ax + by + cz = 0 del plano generado por u y v. Se acepta cualquier ecuación válida.'),vec:vecLine(e.V,['u','v']),inputs:['a','b','c'],
+  hints:[T('(a, b, c) must be orthogonal to both u and v.','(a, b, c) debe ser ortogonal a u y a v.'),T('So (a, b, c) = u × v works, or any nonzero multiple of it.','Así que sirve (a, b, c) = u × v, o cualquier múltiplo no nulo.'),T('Equivalently, the determinant with rows (x, y, z), u and v must be 0.','Equivalente: el determinante con filas (x, y, z), u y v debe valer 0.')]};
+ if(e.type==='coords'){const b1=e.B.map(r=>r[0]),b2=e.B.map(r=>r[1]);return{prompt:T('Find the coordinates (c₁, c₂) of v in the basis B = {b₁, b₂}.','Halla las coordenadas (c₁, c₂) de v en la base B = {b₁, b₂}.'),vec:vecLine([b1,b2,e.v],['b₁','b₂','v']),inputs:['c₁','c₂'],
+  hints:[T('Solve c₁·b₁ + c₂·b₂ = v, a 2×2 system.','Resuelve c₁·b₁ + c₂·b₂ = v, un sistema 2×2.'),T('Equivalently [v]_B = P⁻¹·v, where P has b₁ and b₂ as columns.','Equivalente: [v]_B = P⁻¹·v, donde P tiene b₁ y b₂ como columnas.'),`<code>det P = ${f(det2(b1,b2))}</code>`]}}}
+function explain(e){
+ if(e.type==='indep'){const n=e.V.length,r=rankOf(e.V);let s=T(`rank A = ${r} with ${n} vectors, so they are ${r===n?'independent':'dependent'}.`,`rango A = ${r} con ${n} vectores, así que son ${r===n?'independientes':'dependientes'}.`);
+  if(n===e.dim){const D=n===2?det2(e.V[0],e.V[1]):det3(e.V[0],e.V[1],e.V[2]);s+=`<br><code>det A = ${f(D)}</code>`}
+  if(n>e.dim)s+='<br>'+T(`More vectors than the dimension (${n} > ${e.dim}) always means dependent.`,`Más vectores que la dimensión (${n} > ${e.dim}) siempre implica dependencia.`);
+  if(r<n){const V3=e.V.map(pad3);for(let k=n-1;k>=0;k--){const c=combo(V3,k);if(c.t>=0){s+='<br>'+T('For example:','Por ejemplo:')+` <code>${NM[k]} = ${c.t===0?'0':comboStr(c,NM)}</code>`;break}}}
+  return s}
+ if(e.type==='combo'){const[u,v,w]=e.V,D=det2(u,v);return`<code>a = ${f(det2(w,v))} / ${f(D)} = ${e.ans[0]}</code>, <code>b = det[u w] / det[u v] = ${f(det2(u,w))} / ${f(D)} = ${e.ans[1]}</code><br>`+T('Check:','Comprobación:')+` <code>${e.ans[0]}·${vs(u)} + ${e.ans[1]}·${vs(v)} = ${vs(w)}</code>`}
+ if(e.type==='orthk'){const s=dot(e.u,e.v),t=e.v[e.j];return`<code>${f(s)} + ${f(t)}k = 0 ⇒ k = ${f(-s)} / ${f(t)} = ${f(e.ans[0])}</code>`}
+ if(e.type==='depk'){const u=e.u,v=e.v;return T('With k = ','Con k = ')+`${f(e.ans[0])}: <code>det[u v] = ${f(u[0])}·${f(v[1])} − ${f(u[1])}·${f(v[0])} = ${f(det2(u,v))}</code>`}
+ if(e.type==='orthset'){const[a,b,c]=e.V;return`<code>u·v = ${f(dot(a,b))}, u·w = ${f(dot(a,c))}, v·w = ${f(dot(b,c))}</code><br>`+(e.ans?T('All three are zero, so the set is orthogonal (and therefore independent).','Los tres son cero, así que el conjunto es ortogonal (y por tanto independiente).'):T('At least one is nonzero, so it is not orthogonal.','Al menos uno no es cero, así que no es ortogonal.'))}
+ if(e.type==='proj'){const c=e.ans[0];return`<code>c = ${f(dot(e.w,e.u))} / ${f(dot(e.u,e.u))} = ${f(c)}</code><br>`+T('Projection:','Proyección:')+` <code>proj = ${vs(sc(e.u,c))}</code>. `+T('The remainder','El resto')+` <code>w − proj = ${vs(add(e.w,sc(e.u,-c)))}</code> `+T('is orthogonal to u.','es ortogonal a u.')}
+ if(e.type==='gs'){const[u1,v2]=e.V,c=dot(v2,u1)/dot(u1,u1);return`<code>c = ${f(dot(v2,u1))} / ${f(dot(u1,u1))} = ${f(c)}</code><br><code>u₂ = ${vs(v2)} − ${f(c)}·${vs(u1)} = ${vs(e.ans)}</code><br>`+T('Check:','Comprobación:')+` <code>u₂·u₁ = ${f(dot(e.ans,u1))}</code>`}
+ if(e.type==='image')return`<code>A·v = ${vs(e.ans)}</code>`;
+ if(e.type==='eig'){const tr=e.A[0][0]+e.A[1][1],dt=e.A[0][0]*e.A[1][1]-e.A[0][1]*e.A[1][0],sg=x=>x<0?`+ ${f(-x)}`:`− ${f(x)}`;return`<code>λ² ${sg(tr)}λ ${dt<0?'− '+f(-dt):'+ '+f(dt)} = (λ ${sg(e.ans[0])})(λ ${sg(e.ans[1])})</code><br>`+T('Check: sum = tr A, product = det A.','Comprobación: suma = tr A, producto = det A.')}
+ if(e.type==='eigvec'){const Av=e.A.map(r=>dot(r,e.v));return`<code>A·v = ${vs(Av)} = ${f(e.ans[0])}·${vs(e.v)}</code>`}
+ if(e.type==='rouche'){const c=classify(e.A.map(r=>r.map(x=>F(x))),e.b.map(x=>F(x)),3);return`<span class="pill ${c.type==='SI'?'':'ok'}">${typeName(c.type)}</span><br>${rfReason(c,3)}`}
+ if(e.type==='solve')return`<code>${VARS.slice(0,e.n).map((v,j)=>`${v} = ${f(e.ans[j])}`).join(', ')}</code><br>`+T('Check:','Comprobación:')+'<br>'+e.A.map((r,i)=>`<code>${r.map((a,j)=>`(${f(a)})(${f(e.ans[j])})`).join(' + ')} = ${f(e.b[i])}</code>`).join('<br>');
+ if(e.type==='implicit')return`<code>u × v = ${vs(cross(...e.V))}</code> ⇒ <code>${eqStr(e.ans.map(x=>F(x)))}</code><br>`+T('Any nonzero multiple of (a, b, c) is also correct.','Cualquier múltiplo no nulo de (a, b, c) también es correcto.');
+ if(e.type==='coords'){const b1=e.B.map(r=>r[0]),b2=e.B.map(r=>r[1]);return`<code>${f(e.ans[0])}·${vs(b1)} + ${f(e.ans[1])}·${vs(b2)} = ${vs(e.v)}</code>`}}
+function labVectors(e){if(e.type==='indep'||e.type==='orthset')return{dim:e.dim||3,V:e.V,t:e.V.length-1};if(e.type==='combo')return{dim:2,V:e.V,t:2};
+ if(e.type==='orthk'){const u=e.u.slice();u[e.j]=e.ans[0];return{dim:3,V:[u,e.v],t:1}}
+ return{dim:2,V:[e.u,e.v],t:1}}
+const fmtTime=ms=>{const s=Math.max(0,Math.round(ms/1000));return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
+function renderEx(){if(EXAMDONE){renderExamSummary();return}const e=EX,x=exText(e),done=e.state!=='open',ex=!!EXAM;
+ let h=ex?`<div class="row" style="justify-content:space-between"><span class="kind">${T('Exam','Examen')} · ${T('question','pregunta')} ${EXAM.i+1} ${T('of','de')} ${EXAM.qs.length}</span><span class="timer" id="extimer">${fmtTime(EXAM.dur-(Date.now()-EXAM.start))}</span></div>`:'';
+ h+=`<div class="kind">${kindName(e.type)}</div><div class="prompt">${x.prompt}</div><div class="vecs">${x.vec}</div><div class="answers">`;
+ if(x.choices)h+=x.choices.map(([v,l],i)=>`<button ${done?'disabled':''} onclick="answerIdx(${i})">${l}</button>`).join('');
+ else h+=x.inputs.map((n,i)=>`<label for="ans-${i}">${n} =</label><input class="num" id="ans-${i}" ${done?'disabled':''} inputmode="decimal" autocomplete="off">`).join('')+`<button class="primary" ${done?'disabled':''} onclick="answerNum()">${T('Check','Comprobar')}</button>`;
+ h+=`</div><div class="err" id="exerr"></div>`;
+ if(e.hints&&!ex)h+=`<ul class="hints">${x.hints.slice(0,e.hints).map(t=>`<li>${t}</li>`).join('')}</ul>`;
+ if(done)h+=`<div class="fb ${e.state==='right'?'ok':'no'}"><b>${e.state==='right'?T('Correct.','Correcto.'):T('Not quite.','No exactamente.')}</b> ${e.msg}<div class="how" style="margin-top:6px">${explain(e)}</div></div>`;
+ h+=`<div class="row">`;
+ if(ex)h+=`<button onclick="endExam()">${T('Finish exam','Terminar examen')}</button>`;
+ else if(!done)h+=`<button onclick="hint()" ${e.hints>=x.hints.length?'disabled':''}>${T('Hint','Pista')} (${e.hints}/${x.hints.length})</button><button onclick="giveUp()">${T('Show solution','Ver solución')}</button>`;
+ else h+=`<button class="primary" onclick="gen()">${T('Next exercise →','Siguiente ejercicio →')}</button>${openLabel(e)?`<button onclick="openInLab()">${openLabel(e)}</button>`:''}`;
+ h+='</div>';$('excard').innerHTML=h;
+ if(!done&&x.inputs){const inps=$('excard').querySelectorAll('input');inps.forEach(i=>{i.addEventListener('keydown',ev=>{if(ev.key==='Enter')answerNum()});i.addEventListener('input',()=>{i.classList.remove('bad');$('exerr').textContent=''})});if(e._vals)inps.forEach((i,k)=>i.value=e._vals[k]||'')}}
+function parseNum(s){s=s.trim().replace('−','-').replace(',','.');if(!s)return null;if(s.includes('/')){const[a,b]=s.split('/').map(Number);return isFinite(a)&&isFinite(b)&&b!==0?a/b:null}const x=Number(s);return isFinite(x)?x:null}
+function finish(ok,msg,given){const e=EX,st=STATS[e.type]||(STATS[e.type]={r:0,t:0});st.t++;if(ok)st.r++;save('stats',STATS);
+ score.total++;if(ok){score.right++;score.streak++;score.best=Math.max(score.best,score.streak)}else score.streak=0;save('score',score);renderScore();renderChips();
+ if(EXAM){EXAM.res.push({e,ok,given:given||'—'});EXAM.i++;if(EXAM.i>=EXAM.qs.length)endExam();else{EX=EXAM.qs[EXAM.i];renderEx()}return}
+ e.state=ok?'right':'wrong';e.msg=msg||'';renderEx()}
+function answerChoice(v){if(EX.state!=='open')return;finish(v===EX.ans)}
+function answerIdx(i){if(EX.state!=='open')return;const c=exText(EX).choices[i];finish(c[0]===EX.ans,'',c[1])}
+function startExam(){const N=+$('exn').value;EXAMDONE=null;const qs=Array.from({length:N},()=>makeEx(pickType()));EXAM={qs,i:0,res:[],start:Date.now(),dur:N*120000};EX=qs[0];clearInterval(EXT);EXT=setInterval(tickExam,1000);renderEx();try{$('excard').scrollIntoView({block:'nearest'})}catch(e){}}
+function tickExam(){if(!EXAM)return;const left=EXAM.dur-(Date.now()-EXAM.start),el=$('extimer');if(el)el.textContent=fmtTime(left);if(left<=0)endExam()}
+function endExam(){if(!EXAM)return;clearInterval(EXT);for(let k=EXAM.i;k<EXAM.qs.length;k++)EXAM.res.push({e:EXAM.qs[k],ok:false,given:T('not answered','sin responder')});EXAMDONE={res:EXAM.res,used:Math.min(Date.now()-EXAM.start,EXAM.dur),N:EXAM.qs.length};EXAM=null;renderEx()}
+function renderExamSummary(){const R=EXAMDONE.res,ok=R.filter(r=>r.ok).length;
+ $('excard').innerHTML=`<div class="kind">${T('Exam finished','Examen terminado')}</div><h3>${ok} / ${EXAMDONE.N} · ${Math.round(100*ok/EXAMDONE.N)}%</h3><p class="how" style="margin:0">${T('Time used','Tiempo empleado')}: ${fmtTime(EXAMDONE.used)}. ${T('Open each question to see the correction.','Abre cada pregunta para ver la corrección.')}</p><div class="review">`+R.map((r,k)=>{const x=exText(r.e);return`<details><summary>${r.ok?'✓':'✗'} ${k+1}. ${kindName(r.e.type)} · ${T('your answer','tu respuesta')}: ${r.given}</summary><div class="prompt" style="font-size:15px;margin-top:8px">${x.prompt}</div><div class="vecs" style="margin:6px 0">${x.vec}</div><div class="how">${explain(r.e)}</div></details>`}).join('')+`</div><div class="row"><button class="primary" onclick="startExam()">${T('New exam','Nuevo examen')}</button><button onclick="EXAMDONE=null;gen()">${T('Back to practice','Volver a practicar')}</button></div>`}
+function toggleSmart(){SMART=!SMART;save('smart',SMART);renderChips()}
+function answerNum(){if(EX.state!=='open')return;const inps=[...$('excard').querySelectorAll('input')];const vals=inps.map(i=>parseNum(i.value));let bad=false;inps.forEach((i,k)=>{if(vals[k]===null){i.classList.add('bad');bad=true}});
+ if(bad){$('exerr').textContent=T('Enter a number in every box (fractions like 3/2 work).','Escribe un número en cada casilla (valen fracciones como 3/2).');return}
+ EX._vals=inps.map(i=>i.value);const srt=a=>EX.type==='eig'?a.slice().sort((p,q)=>p-q):a,sv=srt(vals),sa=srt(EX.ans);let ok=sv.every((x,k)=>Math.abs(x-sa[k])<1e-6);
+ if(EX.type==='implicit')ok=nrm(vals)>1e-9&&EX.V.every(v=>Math.abs(dot(vals,v))<1e-6);
+ finish(ok,ok?'':T('Your answer: ','Tu respuesta: ')+vals.map(f).join(', ')+'.',vals.map(f).join(', '))}
+function hint(){EX._vals=[...$('excard').querySelectorAll('input')].map(i=>i.value);EX.hints++;renderEx()}
+function giveUp(){finish(false,T('Here is the solution.','Aquí tienes la solución.'))}
+function openInLab(){if(EX.type==='rouche'||EX.type==='solve'){loadSys(EX.A.map(r=>r.map(String)),EX.b.map(String));return}if(EX.type==='implicit'){loadSub(3,{mode:'gen',M:[0,1,2].map(i=>EX.V.map(v=>String(v[i])))});return}if(EX.type==='coords'){loadCB(2,EX.B.map(r=>r.map(String)),EX.v.map(String));return}if(EX.type==='image'){loadMaps(EX.A,EX.v);return}if(EX.type==='eig'||EX.type==='eigvec'){loadEig(EX.A.map(r=>r.map(String)));return}if(EX.type==='proj'){loadGS(EX.dim,[EX.u,EX.w],2);return}if(EX.type==='gs'){loadGS(EX.dim,EX.V,2);return}const L=labVectors(EX);loadLab(L.dim,L.V,L.t)}
+function renderScore(){$('s-right').textContent=score.right;$('s-total').textContent=score.total;$('s-streak').textContent=score.streak;$('s-best').textContent=score.best;
+ const ws=TYPES.filter(t=>STATS[t.id]&&STATS[t.id].t>=3).map(t=>({t,a:STATS[t.id].r/STATS[t.id].t})).filter(x=>x.a<0.8).sort((a,b)=>a.a-b.a).slice(0,3);
+ $('weak').innerHTML=ws.length?T('Weak spots: ','Puntos débiles: ')+ws.map(x=>`${T(x.t.en,x.t.es)} (${Math.round(100*x.a)}%)`).join(', '):T('Weak spots show up here once you have tried each type a few times.','Los puntos débiles aparecen aquí cuando hayas probado cada tipo varias veces.')}
+function resetScore(){score={right:0,total:0,streak:0,best:0};STATS={};save('score',score);save('stats',STATS);renderScore();renderChips()}
+function renderChips(){$('chips').innerHTML=TYPES.map(t=>{const s=STATS[t.id];return`<button aria-pressed="${enabled.includes(t.id)}" onclick="toggleType('${t.id}')">${T(t.en,t.es)}${s&&s.t?` · ${Math.round(100*s.r/s.t)}%`:''}</button>`}).join('');
+ $('smartbtn').setAttribute('aria-pressed',SMART);$('smartbtn').textContent=SMART?T('Smart mix: on, more of what you miss','Mezcla inteligente: activada, más de lo que fallas'):T('Smart mix: off','Mezcla inteligente: desactivada')}
+function toggleType(id){if(enabled.includes(id)){if(enabled.length===1){$('chiperr').textContent=T('Keep at least one type selected.','Deja al menos un tipo seleccionado.');return}enabled=enabled.filter(x=>x!==id)}else enabled.push(id);$('chiperr').textContent='';save('types4',enabled);renderChips();if(!EXAM&&!EXAMDONE&&!enabled.includes(EX.type)&&EX.state==='open')gen()}
+
+/* ================= ELIMINATION (exact fractions) ================= */
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a||1};
+const F=(n,d=1)=>{if(d<0){n=-n;d=-d}const g=gcd(n,d);return[n/g,d/g]};
+const fadd=(a,b)=>F(a[0]*b[1]+b[0]*a[1],a[1]*b[1]),fsub=(a,b)=>F(a[0]*b[1]-b[0]*a[1],a[1]*b[1]),fmul=(a,b)=>F(a[0]*b[0],a[1]*b[1]),fdiv=(a,b)=>F(a[0]*b[1],a[1]*b[0]);
+const fz=a=>a[0]===0,fone=a=>a[0]===a[1];
+const fs=a=>(a[1]===1?`${a[0]}`:`${a[0]}/${a[1]}`).replace('-','−');
+function parseF(s){s=String(s).trim().replace('−','-').replace(',','.');if(s===''||s==='-')return null;if(/^-?\d+\/-?\d+$/.test(s)){const[a,b]=s.split('/').map(Number);return b===0?null:F(a,b)}if(!/^-?\d*\.?\d+$/.test(s))return null;const k=(s.split('.')[1]||'').length;if(k>6)return null;return F(Math.round(Number(s)*10**k),10**k)}
+const EDEF={r:4,c:4,M:[['1','0','2','1'],['0','1','1','1'],['2','1','5','0'],['1','-1','1','2']]};
+let E=load('elim')||JSON.parse(JSON.stringify(EDEF)),ESTEPS=[],EI=0,ERES=null;
+const sub_=i=>String(i+1).split('').map(c=>'₀₁₂₃₄₅₆₇₈₉'[c]).join('');
+const VN=j=>'v'+sub_(j);
+function fillSelects(){['er','ec'].forEach(id=>{$(id).innerHTML=[1,2,3,4,5,6].map(n=>`<option value="${n}">${n}</option>`).join('')});$('er').value=E.r;$('ec').value=E.c}
+function buildE(){let h='<tr><td></td>'+Array.from({length:E.c},(_,j)=>`<th style="color:${col(j)}">${VN(j)}</th>`).join('')+'</tr>';
+ for(let i=0;i<E.r;i++)h+=`<tr><td class="rl">${i+1}</td>`+Array.from({length:E.c},(_,j)=>`<td><input id="e-${i}-${j}" data-i="${i}" data-j="${j}" value="${E.M[i][j]}" inputmode="decimal" autocomplete="off" aria-label="${VN(j)}, ${T('coordinate','coordenada')} ${i+1}"></td>`).join('')+'</tr>';
+ $('emat').innerHTML=h;$('emat').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{E.M[+inp.dataset.i][+inp.dataset.j]=inp.value;computeE(false)}))}
+function resizeE(){const r=+$('er').value,c=+$('ec').value;const M=Array.from({length:r},(_,i)=>Array.from({length:c},(_,j)=>(E.M[i]&&E.M[i][j]!==undefined)?E.M[i][j]:'0'));E={r,c,M};buildE();computeE(true)}
+function exampleE(){E=JSON.parse(JSON.stringify(EDEF));fillSelects();buildE();computeE(true)}
+function clearE(){E.M=E.M.map(r=>r.map(()=>'0'));buildE();computeE(true)}
+function randomE(){const r=E.r,c=E.c;let cols=Array.from({length:c},()=>Array.from({length:r},()=>ri(-3,3)));if(c>=3&&Math.random()<.6){const a=nz(-2,2),b=ri(-2,2);cols[c-1]=add(sc(cols[0],a),sc(cols[1],b))}E.M=Array.from({length:r},(_,i)=>cols.map(v=>String(v[i])));buildE();computeE(true)}
+function computeE(reset){const bad=[];const M=E.M.map((row,i)=>row.map((s,j)=>{const x=parseF(s);if(!x)bad.push([i,j]);return x}));
+ $('emat').querySelectorAll('input').forEach(i=>i.classList.remove('bad'));
+ if(bad.length){bad.forEach(([i,j])=>$(`e-${i}-${j}`)&&$(`e-${i}-${j}`).classList.add('bad'));$('eerr').textContent=T('Use integers, decimals or fractions like 3/4 in every cell.','Usa enteros, decimales o fracciones como 3/4 en cada casilla.');return}
+ $('eerr').textContent='';save('elim',E);
+ const A=M.map(r=>r.slice()),R=E.r,C=E.c,steps=[];const snap=(op,piv,chg)=>steps.push({M:A.map(r=>r.slice()),op,piv,chg});
+ snap(T('Start: each vector is a column','Inicio: cada vector es una columna'),null,[]);
+ let r=0,sign=1,prod=[1,1];const piv=[];
+ for(let c=0;c<C&&r<R;c++){let p=-1;for(let i=r;i<R;i++)if(!fz(A[i][c])&&(p<0||(Math.abs(A[i][c][0])===1&&A[i][c][1]===1&&!(Math.abs(A[p][c][0])===1&&A[p][c][1]===1))))p=i;if(p<0)continue;
+  if(p!==r){[A[r],A[p]]=[A[p],A[r]];sign=-sign;snap(`R${sub_(r)} ↔ R${sub_(p)}`,[r,c],[r,p])}
+  const pv=A[r][c];prod=fmul(prod,pv);
+  if(!fone(pv)){A[r]=A[r].map(x=>fdiv(x,pv));snap(pv[0]===-1&&pv[1]===1?`R${sub_(r)} ← −R${sub_(r)}`:`R${sub_(r)} ← R${sub_(r)} ÷ ${fs(pv)}`,[r,c],[r])}
+  const ops=[],chg=[];for(let i=0;i<R;i++){if(i===r||fz(A[i][c]))continue;const k=A[i][c];A[i]=A[i].map((x,j)=>fsub(x,fmul(k,A[r][j])));const ak=[Math.abs(k[0]),k[1]];ops.push(`R${sub_(i)} ← R${sub_(i)} ${k[0]>0?'−':'+'} ${fone(ak)?'':fs(ak)}R${sub_(r)}`);chg.push(i)}
+  if(ops.length)snap(ops.join('    '),[r,c],chg);
+  piv.push(c);r++}
+ steps.push({M:A.map(x=>x.slice()),op:T('Reduced row echelon form (RREF)','Forma escalonada reducida (FERF)'),piv:null,chg:[],final:true,pivs:piv});
+ ESTEPS=steps;const det=R===C?(r<R?[0,1]:fmul([sign,1],prod)):null;
+ ERES={rank:r,piv,A,det,M};if(reset||EI>=steps.length)EI=reset?0:steps.length-1;renderE()}
+function renderE(){if(!ERES)return;const st=ESTEPS[EI],R=E.r,C=E.c,pc=st.final?st.pivs.map((c,i)=>[i,c]):(st.piv?[st.piv]:[]);
+ let h='<tr>'+Array.from({length:C},(_,j)=>`<th style="color:${col(j)}">${VN(j)}</th>`).join('')+'</tr>';
+ st.M.forEach((row,i)=>{h+=`<tr class="${st.chg.includes(i)?'chg':''}">`+row.map((x,j)=>`<td class="${pc.some(([a,b])=>a===i&&b===j)?'piv':''}">${fs(x)}</td>`).join('')+'</tr>'});
+ $('eshow').innerHTML=h;$('eop').textContent=st.op;$('ecount').textContent=`${EI+1} / ${ESTEPS.length}`;
+ const{rank,piv,A,det,M}=ERES,ind=rank===C;
+ let orth=true;for(let a=0;a<C;a++){if(M.every(r=>fz(r[a])))orth=false;for(let b=a+1;b<C;b++){let s=[0,1];for(let i=0;i<R;i++)s=fadd(s,fmul(M[i][a],M[i][b]));if(!fz(s))orth=false}}
+ $('estatus').innerHTML=`<span class="pill ${ind?'ok':''}">${ind?T('✓ Independent','✓ Independientes'):T('✗ Dependent','✗ Dependientes')}</span><span class="pill info">${T('rank','rango')} ${rank} ${T('of','de')} ${C}</span><span class="pill ${orth?'ok':''}">${orth?T('✓ Orthogonal set','✓ Conjunto ortogonal'):T('✗ Not orthogonal','✗ No ortogonal')}</span>`;
+ const Rn=`ℝ${['¹','²','³','⁴','⁵','⁶'][R-1]}`;
+ let s=T(`${C} vector${C>1?'s':''} in ${Rn}, ${rank} pivot${rank!==1?'s':''}. The span has dimension ${rank}`,`${C} vector${C>1?'es':''} en ${Rn}, ${rank} pivote${rank!==1?'s':''}. El subespacio generado tiene dimensión ${rank}`)+(rank===R?T(`, so it is all of ${Rn}.`,`, así que es todo ${Rn}.`):'.');
+ if(C>R)s+=' '+T(`There are more vectors than coordinates (${C} > ${R}), so they must be dependent.`,`Hay más vectores que coordenadas (${C} > ${R}), así que tienen que ser dependientes.`);
+ if(det)s+=`<br><code>det A = ${fs(det)}</code>`;
+ if(rank)s+='<br>'+T('Basis of the span (pivot columns):','Base del subespacio (columnas pivote):')+` <code>{${piv.map(VN).join(', ')}}</code>`;
+ const free=Array.from({length:C},(_,j)=>j).filter(j=>!piv.includes(j));
+ if(free.length){s+='<br>'+T('Each non-pivot vector, written with the pivot vectors (read off the final form):','Cada vector no pivote, escrito con los vectores pivote (se lee en la forma final):')+'<div class="deps" style="margin-top:6px">'+free.map(j=>{let t='';piv.forEach((pcol,i)=>{const k=A[i][j];if(fz(k))return;const ak=[Math.abs(k[0]),k[1]];t+=(t===''?(k[0]<0?'−':''):(k[0]<0?' − ':' + '))+(fone(ak)?'':fs(ak)+'·')+VN(pcol)});return`<span>${VN(j)} = ${t||'0'}</span>`}).join('')+'</div>'}
+ $('esum').innerHTML=s}
+function stepE(k){EI=Math.max(0,Math.min(ESTEPS.length-1,EI+k));renderE()}
+function loadElim(M){E={r:M.length,c:M[0].length,M:M.map(r=>r.map(String))};fillSelects();buildE();computeE(true);showTab('elimination')}
+
+/* ================= GRAM-SCHMIDT ================= */
+CV.forEach((c,i)=>{const m=mk('marker',{id:'gh'+i,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto'},$('gdefs'));const p=mk('path',{d:'M1 1L9 5L1 9Z'},m);p.style.fill=col(i)});
+const GDEF={n:3,k:3,M:[['1','1','0'],['1','0','1'],['0','1','1']]};
+let G=load('gs')||JSON.parse(JSON.stringify(GDEF)),GS=null,gi=0,gy=-0.6,gp=0.4,grot=null;
+const UN=j=>'u'+sub_(j),EN_=j=>'e'+sub_(j);
+const fdot=(a,b)=>a.reduce((s,x,i)=>fadd(s,fmul(x,b[i])),[0,1]);
+const fnum=a=>a[0]/a[1];
+const vF=v=>`(${v.map(fs).join(', ')})`;
+const fp=x=>x[1]===1?fs(x):`(${fs(x)})`;
+function fillGSelects(){$('gn').innerHTML=[2,3,4].map(n=>`<option value="${n}">${n}</option>`).join('');$('gk').innerHTML=[1,2,3,4].map(n=>`<option value="${n}">${n}</option>`).join('');$('gn').value=G.n;$('gk').value=G.k}
+function buildG(){let h='<tr><td></td>'+Array.from({length:G.k},(_,j)=>`<th style="color:${col(j)}">${VN(j)}</th>`).join('')+'</tr>';
+ for(let i=0;i<G.n;i++)h+=`<tr><td class="rl">${i+1}</td>`+Array.from({length:G.k},(_,j)=>`<td><input id="g-${i}-${j}" data-i="${i}" data-j="${j}" value="${G.M[i][j]}" inputmode="decimal" autocomplete="off" aria-label="${VN(j)}, ${T('coordinate','coordenada')} ${i+1}"></td>`).join('')+'</tr>';
+ $('gmat').innerHTML=h;$('gmat').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{G.M[+inp.dataset.i][+inp.dataset.j]=inp.value;computeG(false)}))}
+function resizeG(){const n=+$('gn').value,k=+$('gk').value;G={n,k,M:Array.from({length:n},(_,i)=>Array.from({length:k},(_,j)=>(G.M[i]&&G.M[i][j]!==undefined)?G.M[i][j]:'0'))};buildG();computeG(true)}
+function loadGS(n,vecs,step){const k=Math.max(1,Math.min(vecs.length,4));G={n,k,M:Array.from({length:n},(_,i)=>vecs.slice(0,k).map(v=>String(Math.round((v[i]||0)*1000)/1000)))};fillGSelects();buildG();computeG(true);showTab('gs');if(step&&GS){gi=Math.min(step,GS.V.length+1);renderG()}}
+function elimToGS(){if(E.r<2||E.r>4){$('eerr').textContent=T('Gram–Schmidt here works in ℝ², ℝ³ and ℝ⁴. Change the dimension first.','Aquí Gram–Schmidt funciona en ℝ², ℝ³ y ℝ⁴. Cambia primero la dimensión.');return}const k=Math.min(E.c,4);G={n:E.r,k,M:E.M.map(r=>r.slice(0,k))};fillGSelects();buildG();computeG(true);showTab('gs')}
+function randomG(){const cols=Array.from({length:G.k},()=>{let v;do v=Array.from({length:G.n},()=>ri(-3,3));while(nrm(v)<1e-9);return v});G.M=Array.from({length:G.n},(_,i)=>cols.map(v=>String(v[i])));buildG();computeG(true)}
+function computeG(reset){const bad=[];const M=G.M.map((row,i)=>row.map((s,j)=>{const x=parseF(s);if(!x)bad.push([i,j]);return x}));
+ $('gmat').querySelectorAll('input').forEach(i=>i.classList.remove('bad'));
+ if(bad.length){bad.forEach(([i,j])=>$(`g-${i}-${j}`)&&$(`g-${i}-${j}`).classList.add('bad'));$('gerr').textContent=T('Use integers, decimals or fractions like 3/4 in every cell.','Usa enteros, decimales o fracciones como 3/4 en cada casilla.');return}
+ $('gerr').textContent='';save('gs',G);
+ const V=Array.from({length:G.k},(_,j)=>M.map(r=>r[j])),U=[],C=[],Z=[];
+ V.forEach((v,k)=>{let w=v.slice();const cs=[];for(let j=0;j<k;j++){if(Z[j]){cs.push(null);continue}const c=fdiv(fdot(v,U[j]),fdot(U[j],U[j]));cs.push(c);w=w.map((x,i)=>fsub(x,fmul(c,U[j][i])))}U.push(w);C.push(cs);Z.push(w.every(fz))});
+ GS={V,U,C,Z};if(reset)gi=0;gi=Math.min(gi,G.k+1);renderG()}
+function renderG(){if(!GS)return;const{V,U,C,Z}=GS,k=V.length;
+ $('gcount').textContent=`${gi+1} / ${k+2}`;let op='',how='';
+ if(gi===0){op=T('Start','Inicio');const vl=V.map((_,j)=>VN(j)).join(', '),ul=V.map((_,j)=>UN(j)).join(', ');how=T(`Gram–Schmidt turns ${vl} into orthogonal vectors ${ul} that span the same subspace. Each step takes the next vector and removes its projections onto the u's already built. Press Next.`,`Gram–Schmidt transforma ${vl} en vectores ortogonales ${ul} que generan el mismo subespacio. Cada paso toma el siguiente vector y le quita sus proyecciones sobre los u ya construidos. Pulsa Siguiente.`)}
+ else if(gi<=k){const i=gi-1;op=`${UN(i)} = ${VN(i)}`+C[i].map((c,j)=>c?` − ((${VN(i)}·${UN(j)}) / (${UN(j)}·${UN(j)}))·${UN(j)}`:'').join('');
+  if(i===0)how=T(`The first vector stays as it is: <code>${UN(0)} = ${VN(0)} = ${vF(U[0])}</code>`,`El primer vector se queda igual: <code>${UN(0)} = ${VN(0)} = ${vF(U[0])}</code>`)+(Z[0]?'<br>'+T('It is the zero vector, so it is skipped.','Es el vector nulo, así que se descarta.'):'');
+  else{const lines=C[i].map((c,j)=>c?`<code>(${VN(i)}·${UN(j)}) / (${UN(j)}·${UN(j)}) = ${fp(fdot(V[i],U[j]))} / ${fp(fdot(U[j],U[j]))} = ${fs(c)}</code>`:'').filter(Boolean);
+   how=T(`Remove from ${VN(i)} its projection onto each previous u:`,`Quita a ${VN(i)} su proyección sobre cada u anterior:`)+'<br>'+lines.join('<br>')+'<br>'+`<code>${UN(i)} = ${vF(V[i])}`+C[i].map((c,j)=>c&&!fz(c)?` ${c[0]>0?'−':'+'} ${fone([Math.abs(c[0]),c[1]])?'':fs([Math.abs(c[0]),c[1]])+'·'}${vF(U[j])}`:'').join('')+` = ${vF(U[i])}</code>`;
+   if(Z[i])how+='<br>'+T(`${UN(i)} = 0, so ${VN(i)} is a combination of the previous vectors. It adds nothing new to the span and is skipped. This makes Gram–Schmidt a test for dependence too.`,`${UN(i)} = 0, así que ${VN(i)} es combinación de los anteriores. No aporta nada nuevo al subespacio y se descarta. Por eso Gram–Schmidt también sirve como test de dependencia.`);
+   else{const ch=[];for(let j=0;j<i;j++)if(!Z[j])ch.push(`${UN(i)}·${UN(j)} = ${fs(fdot(U[i],U[j]))}`);how+='<br>'+T('Check:','Comprobación:')+` <code>${ch.join(', ')}</code>`}}}
+ else{op=T('Normalize: eₖ = uₖ / ‖uₖ‖','Normaliza: eₖ = uₖ / ‖uₖ‖');const lines=[];U.forEach((u,j)=>{if(Z[j])return;const q=fdot(u,u),nn=Math.sqrt(fnum(q));lines.push(`<code>‖${UN(j)}‖ = √${q[1]===1?q[0]:'('+fs(q)+')'} ≈ ${f(nn)}, &nbsp;${EN_(j)} ≈ (${u.map(x=>(fnum(x)/nn).toFixed(3).replace('-','−')).join(', ')})</code>`)});
+  const r=Z.filter(z=>!z).length;how=lines.join('<br>')+'<br>'+(r===1?T('This single unit vector is an orthonormal basis of the span.','Este único vector unitario es una base ortonormal del subespacio generado.'):T(`These ${r} vectors form an orthonormal basis of the span. As columns they give a matrix Q with QᵀQ = I.`,`Estos ${r} vectores forman una base ortonormal del subespacio generado. Puestos en columnas dan una matriz Q con QᵀQ = I.`))}
+ $('gop').textContent=op;$('ghow').innerHTML=how;
+ const upto=Math.min(gi,k);let res='';for(let j=0;j<upto;j++)res+=`<span style="color:${col(j)}">${UN(j)} = ${Z[j]?'0':vF(U[j])}</span>`;$('gres').innerHTML=res||`<span class="hint">${T('Press Next to start.','Pulsa Siguiente para empezar.')}</span>`;
+ const r=Z.filter(z=>!z).length;$('gstatus').innerHTML=gi>k?`<span class="pill ${r===k?'ok':''}">${r===k?T('✓ Independent','✓ Independientes'):T('✗ Dependent','✗ Dependientes')}</span><span class="pill info">${T('rank','rango')} ${r} ${T('of','de')} ${k}</span>`:'';
+ if(tab==='gs')drawG()}
+function drawG(){if(!GS)return;const vis=G.n<=3;$('gsvg').style.display=vis?'block':'none';$('gnovis').hidden=vis;$('ghint').textContent=vis&&G.n===3?T('Drag the plot to rotate','Arrastra el gráfico para girarlo'):'';if(!vis)return;
+ const{V,U,C,Z}=GS,k=V.length,Vn=V.map(v=>pad3(v.map(fnum))),Un=U.map(v=>pad3(v.map(fnum)));
+ let m=0;[...Vn,...Un].forEach(v=>v.forEach(x=>m=Math.max(m,Math.abs(x))));
+ const dim=G.n,lim=dim===2?5:4,base=dim===2?40:42;DR={dim,yaw:gy,pitch:gp,mk:'gh',s:base*Math.min(1.5,m>0?lim/m:1)};
+ drawGrid($('ggrid'));const g=$('gvecs');g.innerHTML='';const ra=$('gras');ra.innerHTML='';
+ const vec=(a,i,op,label,dash,w)=>{const gg=mk('g',{opacity:op},g);if(nrm(a)>1e-9)arrow([0,0,0],a,i,dash||'',gg,w);if(label){const tip=P(a),t=mk('text',{x:tip[0]+7,y:tip[1]-7},gg);t.textContent=label;t.style.cssText=`font:500 14px var(--mono);fill:${col(i)}`}};
+ const right=ids=>{const L=0.4*42/DR.s;for(let a=0;a<ids.length;a++)for(let b=a+1;b<ids.length;b++){const x=sc(Un[ids[a]],L/nrm(Un[ids[a]])),y=sc(Un[ids[b]],L/nrm(Un[ids[b]]));const p=mk('path',{d:`M${P(x)}L${P(add(x,y))}L${P(y)}`,fill:'none','stroke-width':1.2},ra);p.style.stroke='var(--ink)'}};
+ if(gi===0)Vn.forEach((v,i)=>vec(v,i,1,VN(i)));
+ else if(gi<=k){const i=gi-1,done=[];for(let j=0;j<i;j++)if(!Z[j]){vec(Un[j],j,1,UN(j));done.push(j)}
+  for(let j=i+1;j<k;j++)vec(Vn[j],j,.18,VN(j));
+  vec(Vn[i],i,.45,i>0?VN(i):'');
+  let acc=[0,0,0];C[i].forEach((c,j)=>{if(!c||fz(c))return;const comp=sc(Un[j],fnum(c));arrow(acc,add(acc,comp),j,'6 4',mk('g',{opacity:.9},g),2);acc=add(acc,comp)});
+  if(!Z[i]){if(i>0)arrow(acc,Vn[i],i,'3 4',mk('g',{opacity:.8},g),1.6);vec(Un[i],i,1,i>0?UN(i):`${UN(0)} = ${VN(0)}`);done.push(i)}
+  right(done)}
+ else{const ids=[];Un.forEach((u,j)=>{if(Z[j])return;vec(u,j,.25,'');vec(sc(u,1/nrm(u)),j,1,EN_(j));ids.push(j)});right(ids)}}
+function stepG(n){if(!GS)return;gi=Math.max(0,Math.min(GS.V.length+1,gi+n));renderG()}
+const gsvg=$('gsvg');
+gsvg.addEventListener('pointerdown',e=>{if(G.n!==3)return;grot=[e.clientX,e.clientY,gy,gp];gsvg.setPointerCapture(e.pointerId);gsvg.style.cursor='grabbing'});
+gsvg.addEventListener('pointermove',e=>{if(!grot)return;gy=grot[2]-(e.clientX-grot[0])*0.01;gp=Math.max(-1.4,Math.min(1.4,grot[3]+(e.clientY-grot[1])*0.01));drawG()});
+gsvg.addEventListener('pointerup',()=>{grot=null;gsvg.style.cursor=G.n===3?'grab':'default'});
+
+/* ================= LINEAR MAPS ================= */
+CV.forEach((c,i)=>{const m=mk('marker',{id:'mh'+i,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto'},$('mdefs'));const p=mk('path',{d:'M1 1L9 5L1 9Z'},m);p.style.fill=col(i)});
+const matHTML=(M,fmt=f)=>`<span class="mini"><span class="br l"></span><table>${M.map(r=>`<tr>${r.map(x=>`<td>${fmt(x)}</td>`).join('')}</tr>`).join('')}</table><span class="br r"></span></span>`;
+const MPRE=[['Symmetric','Simétrica',[[2,1],[1,2]]],['Rotation 90°','Rotación 90°',[[0,-1],[1,0]]],['Rotation 30°','Rotación 30°',[[0.866,-0.5],[0.5,0.866]]],['Shear','Cizalla',[[1,1],[0,1]]],['Scaling','Escalado',[[2,0],[0,0.5]]],['Reflection','Reflexión',[[0,1],[1,0]]],['Projection','Proyección',[[1,0],[0,0]]],['Rank 1','Rango 1',[[1,2],[0.5,1]]]];
+const MS=load('maps')||{};let MA=MS.A||[[2,1],[1,2]],MX=MS.x||[1,0],mT=1,mdrag=false,mraf=null;
+const ap=(M,v)=>[M[0][0]*v[0]+M[0][1]*v[1],M[1][0]*v[0]+M[1][1]*v[1]];
+function buildMaps(){$('mpresets').innerHTML='';MPRE.forEach(([en,es,A])=>{const b=document.createElement('button');b.textContent=T(en,es);b.onclick=()=>{MA=A.map(r=>r.slice());$('merr').textContent='';buildMapsMat();animMaps()};$('mpresets').appendChild(b)});buildMapsMat()}
+function buildMapsMat(){let h='<tr><td></td><th style="color:'+col(0)+'">Ae₁</th><th style="color:'+col(1)+'">Ae₂</th></tr>';
+ for(let i=0;i<2;i++)h+=`<tr><td class="rl">${'xy'[i]}</td>`+[0,1].map(j=>`<td><input id="m-${i}-${j}" data-i="${i}" data-j="${j}" value="${MA[i][j]}" inputmode="decimal" autocomplete="off" aria-label="A ${i+1},${j+1}"></td>`).join('')+'</tr>';
+ $('mmat').innerHTML=h;$('mmat').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{const v=parseNum(inp.value);if(v===null){inp.classList.add('bad');$('merr').textContent=T('Enter a number in every cell.','Escribe un número en cada casilla.');return}inp.classList.remove('bad');if(!$('mmat').querySelector('.bad'))$('merr').textContent='';MA[+inp.dataset.i][+inp.dataset.j]=v;drawMaps()}))}
+function mapInfo(A){const[a,b]=A[0],[c,d]=A[1],det=a*d-b*c,tr=a+d,E=1e-9,disc=tr*tr-4*det;
+ const evec=l=>{const r0=[a-l,b],r1=[c,d-l],r=Math.hypot(...r0)>=Math.hypot(...r1)?r0:r1;if(Math.hypot(...r)<1e-7)return'all';const v=[-r[1],r[0]],m=Math.max(Math.abs(v[0]),Math.abs(v[1]));return v.map(x=>Math.round(x/m*1000)/1000)};
+ let eig=null,cx=null;if(disc>1e-9){const s=Math.sqrt(disc);eig=[(tr+s)/2,(tr-s)/2].map(l=>({l,v:evec(l)}))}else if(disc>=-1e-9)eig=[{l:tr/2,v:evec(tr/2)}];else cx={re:tr/2,im:Math.sqrt(-disc)/2};
+ const zero=[a,b,c,d].every(x=>Math.abs(x)<E),rank=zero?0:Math.abs(det)<E?1:2;
+ let ker=null,im=null;if(rank===1){const r=Math.hypot(a,b)>E?[a,b]:[c,d];ker=[-r[1],r[0]];im=Math.hypot(a,c)>E?[a,c]:[b,d]}
+ return{det,tr,rank,eig,cx,ker,im}}
+function mapClass(A,I){const[a,b]=A[0],[c,d]=A[1],e=1e-3;let s;
+ if(I.rank===0)return T('A sends every vector to 0.','A envía todo vector al 0.');
+ if(Math.abs(a-1)<e&&Math.abs(d-1)<e&&Math.abs(b)<e&&Math.abs(c)<e)return T('A is the identity: nothing moves.','A es la identidad: nada se mueve.');
+ const orth=Math.abs(a*a+c*c-1)<e&&Math.abs(b*b+d*d-1)<e&&Math.abs(a*b+c*d)<e;
+ if(orth&&I.det>0)return T(`Rotation by ${Math.round(Math.atan2(c,a)*180/Math.PI)}°. Lengths and angles are preserved.`,`Rotación de ${Math.round(Math.atan2(c,a)*180/Math.PI)}°. Conserva longitudes y ángulos.`)+(I.cx?T(' No direction stays on its own line, so there are no real eigenvectors.',' Ninguna dirección se queda en su recta, así que no hay vectores propios reales.'):'');
+ if(orth)return T('Reflection across a line. Vectors on that line stay (λ = 1); vectors perpendicular to it flip (λ = −1).','Reflexión respecto de una recta. Los vectores de esa recta no cambian (λ = 1) y los perpendiculares se invierten (λ = −1).');
+ if(I.rank===1){const proj=Math.abs(a*a+b*c-a)<e&&Math.abs(a*b+b*d-b)<e&&Math.abs(c*a+d*c-c)<e&&Math.abs(c*b+d*d-d)<e;return(proj?T('A is a projection (A² = A). It','A es una proyección (A² = A). Aplasta'):T('A','A aplasta'))+T(' squashes the plane onto a line, the image. Every vector on the kernel line goes to 0.',' el plano sobre una recta, la imagen. Todo vector de la recta del núcleo va al 0.')}
+ if(I.cx)s=T('A rotates and stretches. Its eigenvalues are complex, so no direction stays on its own line.','A gira y estira. Sus valores propios son complejos, así que ninguna dirección se queda en su recta.');
+ else if(I.eig.length===2)s=T(`A stretches by ${f(I.eig[0].l)} along one eigen-direction and by ${f(I.eig[1].l)} along the other.`,`A estira por ${f(I.eig[0].l)} en una dirección propia y por ${f(I.eig[1].l)} en la otra.`);
+ else if(I.eig[0].v==='all')s=T(`A scales every vector by ${f(I.eig[0].l)}.`,`A multiplica todo vector por ${f(I.eig[0].l)}.`);
+ else s=T(`Only one eigen-direction (λ = ${f(I.eig[0].l)}). A acts like a shear and cannot be diagonalized.`,`Solo hay una dirección propia (λ = ${f(I.eig[0].l)}). A actúa como una cizalla y no es diagonalizable.`);
+ if(I.det<0)s+=T(' It reverses orientation (det < 0).',' Invierte la orientación (det < 0).');return s}
+function mlabel(p,t,i,g){const q=P(p),n=Math.hypot(p[0],p[1])||1,e=mk('text',{x:q[0]+p[0]/n*16-6,y:q[1]-p[1]/n*16+5},g);e.textContent=t;e.style.cssText=`font:500 14px var(--mono);fill:${col(i)}`}
+function drawMaps(){if(!$('msvg'))return;DR={dim:2,s:40,mk:'mh',yaw:0,pitch:0};const t=mT,A=MA,Mt=[[1-t+t*A[0][0],t*A[0][1]],[t*A[1][0],1-t+t*A[1][1]]];
+ drawGrid($('mgrid0'));$('mgrid0').style.opacity=.6;
+ const G=$('mgrid');G.innerHTML='';for(let i=-12;i<=12;i++){const l1=line(ap(Mt,[i,-12]),ap(Mt,[i,12]),'var(--accent)',i?1:1.8,'',G),l2=line(ap(Mt,[-12,i]),ap(Mt,[12,i]),'var(--accent)',i?1:1.8,'',G);l1.style.opacity=l2.style.opacity=i?.32:.75}
+ const PG=$('mpar');PG.innerHTML='';const pg=mk('polygon',{points:[[0,0],ap(Mt,[1,0]),ap(Mt,[1,1]),ap(Mt,[0,1])].map(P).join(' ')},PG);pg.style.cssText='fill:var(--plane);fill-opacity:.22;stroke:var(--plane);stroke-width:1';
+ const I=mapInfo(A),EG_=$('meig');EG_.innerHTML='';
+ if(I.eig)I.eig.forEach(({l,v})=>{if(v==='all')return;const n=Math.hypot(...v),u=[v[0]/n,v[1]/n];const ln=line([-u[0]*12,-u[1]*12],[u[0]*12,u[1]*12],'var(--v4)',1.6,'6 5',EG_);ln.style.opacity=.85;const q=P([u[0]*4.6,u[1]*4.6]),tx=mk('text',{x:q[0]+6,y:q[1]-6},EG_);tx.textContent=`λ = ${f(l)}`;tx.style.cssText='font:500 13px var(--mono);fill:var(--v4)'});
+ const V=$('mvecs');V.innerHTML='';const g1=mk('g',{},V);
+ arrow([0,0],ap(Mt,[1,0]),0,'',g1);mlabel(ap(Mt,[1,0]),'Ae₁',0,g1);arrow([0,0],ap(Mt,[0,1]),1,'',g1);mlabel(ap(Mt,[0,1]),'Ae₂',1,g1);
+ const gx=mk('g',{opacity:.55},V);arrow([0,0],MX,2,'5 4',gx,2);mlabel(MX,'x',2,gx);
+ const Ax=ap(Mt,MX);if(Math.hypot(...Ax)>1e-9)arrow([0,0],Ax,2,'',V,3);mlabel(Ax,t<1?'Aₜx':'Ax',2,V);
+ const hp=P(MX),h=mk('circle',{cx:hp[0],cy:hp[1],r:12},V);h.style.cssText=`fill:${col(2)};fill-opacity:.2;stroke:${col(2)};cursor:grab`;h.addEventListener('pointerdown',e=>{e.stopPropagation();mdrag=true;$('msvg').setPointerCapture(e.pointerId)});
+ $('mtv').textContent=t.toFixed(2);
+ const AX=ap(A,MX),cr=MX[0]*AX[1]-MX[1]*AX[0],nx=Math.hypot(...MX);
+ let xs=`<code>x = ${vs(MX)}</code><br><code>Ax = ${f(MX[0])}·Ae₁ + ${f(MX[1])}·Ae₂ = ${vs(AX)}</code>`;
+ if(nx>1e-9&&Math.hypot(...AX)<1e-9)xs+='<br>'+T('x is in the kernel: Ax = 0, so it is an eigenvector with λ = 0.','x está en el núcleo: Ax = 0, así que es vector propio con λ = 0.');
+ else if(nx>1e-9&&Math.abs(cr)<1e-9)xs+='<br>'+T('x is an eigenvector: ','x es un vector propio: ')+`<code>Ax = ${f(dot(AX,MX)/dot(MX,MX))}·x</code>`;
+ else if(nx>1e-9)xs+='<br>'+T('Ax leaves the line of x, so x is not an eigenvector. Drag x onto a dashed pink line.','Ax se sale de la recta de x, así que x no es vector propio. Arrastra x sobre una línea rosa discontinua.');
+ $('mx').innerHTML=xs;$('mclass').textContent=mapClass(A,I);
+ const ev=I.cx?`${Math.abs(I.cx.re)<1e-9?'':f(I.cx.re)+' '}± ${f(I.cx.im)==='1'?'':f(I.cx.im)}i`:I.eig.map(e=>f(e.l)).join(', ')+(I.eig.length===1?T(' (double)',' (doble)'):'');
+ $('minfo').innerHTML=[[`det A`,`${f(I.det)}${T(' · areas × ',' · áreas × ')}${f(Math.abs(I.det))}`],['tr A',f(I.tr)],[T('rank A','rango A'),I.rank],[T('ker A','núcleo'),I.rank===2?'{0}':I.rank===1?`span{${vs(I.ker)}}`:'ℝ²'],[T('im A','imagen'),I.rank===2?'ℝ²':I.rank===1?`span{${vs(I.im)}}`:'{0}'],[T('rank–nullity','rango–nulidad'),`${I.rank} + ${2-I.rank} = 2`],[T('eigenvalues','valores propios'),ev]].map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('');
+ save('maps',{A:MA,x:MX})}
+function animMaps(){if(mraf)cancelAnimationFrame(mraf);if(matchMedia('(prefers-reduced-motion: reduce)').matches){mT=1;$('mt').value=1;drawMaps();return}const s=performance.now();const st=now=>{mT=Math.min((now-s)/1600,1);$('mt').value=mT;drawMaps();if(mT<1)mraf=requestAnimationFrame(st)};mraf=requestAnimationFrame(st)}
+function loadMaps(A,x){MA=A.map(r=>r.slice(0,2));if(x)MX=x.slice(0,2);mT=1;$('mt').value=1;buildMapsMat();showTab('maps')}
+const msvg=$('msvg');
+msvg.addEventListener('pointermove',e=>{if(!mdrag)return;const r=msvg.getBoundingClientRect(),k=680/r.width;let p=[((e.clientX-r.left)*k-340)/40,(220-(e.clientY-r.top)*k)/40].map(v=>Math.round(v*2)/2);p[0]=Math.max(-8,Math.min(8,p[0]));p[1]=Math.max(-5,Math.min(5,p[1]));MX=p;drawMaps()});
+msvg.addEventListener('pointerup',()=>mdrag=false);
+
+/* ================= EIGENVALUES ================= */
+const EGP={2:[['Distinct λ','λ distintos',[[4,1],[2,3]]],['Symmetric','Simétrica',[[2,1],[1,2]]],['Complex λ','λ complejos',[[0,-1],[1,0]]],['Not diagonalizable','No diagonalizable',[[1,1],[0,1]]],['Irrational λ','λ irracionales',[[1,1],[1,0]]]],
+ 3:[['Repeated λ','λ repetido',[[4,0,1],[2,3,2],[1,0,4]]],['Not diagonalizable','No diagonalizable',[[2,1,0],[0,2,0],[0,0,3]]],['Symmetric','Simétrica',[[2,1,0],[1,2,1],[0,1,2]]],['Triangular','Triangular',[[1,2,3],[0,4,5],[0,0,6]]]]};
+let EGS=load('eig')||{n:2,M:[['4','1'],['2','3']]};
+const fI=n=>Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>F(i===j?1:0)));
+const feq=(a,b)=>a[0]===b[0]&&a[1]===b[1];
+function rrefF(M0){const M=M0.map(r=>r.slice()),R=M.length,C=M[0].length,piv=[];let r=0;for(let c=0;c<C&&r<R;c++){let p=-1;for(let i=r;i<R;i++)if(!fz(M[i][c])){p=i;break}if(p<0)continue;[M[r],M[p]]=[M[p],M[r]];const pv=M[r][c];M[r]=M[r].map(x=>fdiv(x,pv));for(let i=0;i<R;i++){if(i===r||fz(M[i][c]))continue;const k=M[i][c];M[i]=M[i].map((x,j)=>fsub(x,fmul(k,M[r][j])))}piv.push(c);r++}return{R:M,piv}}
+function intV(v){let L=1;v.forEach(x=>{L=L*x[1]/gcd(L,x[1])});let w=v.map(x=>x[0]*(L/x[1]));const g=w.reduce((a,x)=>gcd(a,x),0)||1;w=w.map(x=>x/g);const fst=w.find(x=>x!==0);if(fst<0)w=w.map(x=>-x);return w.map(x=>F(x+0))}
+function nullF(M){const{R,piv}=rrefF(M),C=M[0].length,out=[];for(let j=0;j<C;j++){if(piv.includes(j))continue;const v=Array.from({length:C},()=>F(0));v[j]=F(1);piv.forEach((pc,i)=>{v[pc]=fmul(F(-1),R[i][j])});out.push(intV(v))}return out}
+function nullN(M){const A=M.map(r=>r.slice()),R=A.length,C=A[0].length,piv=[],sc_=Math.max(1,...A.flat().map(Math.abs)),tol=1e-6*sc_;let r=0;
+ for(let c=0;c<C&&r<R;c++){let p=r;for(let i=r;i<R;i++)if(Math.abs(A[i][c])>Math.abs(A[p][c]))p=i;if(Math.abs(A[p][c])<tol)continue;[A[r],A[p]]=[A[p],A[r]];const pv=A[r][c];A[r]=A[r].map(x=>x/pv);for(let i=0;i<R;i++){if(i===r)continue;const k=A[i][c];A[i]=A[i].map((x,j)=>x-k*A[r][j])}piv.push(c);r++}
+ const out=[];for(let j=0;j<C;j++){if(piv.includes(j))continue;const v=Array(C).fill(0);v[j]=1;piv.forEach((pc,i)=>v[pc]=-A[i][j]);const m=Math.max(...v.map(Math.abs));out.push(v.map(x=>x/m))}return out}
+function invF(P){const n=P.length,I=fI(n),{R,piv}=rrefF(P.map((r,i)=>[...r,...I[i]]));if(piv.filter(c=>c<n).length<n)return null;return R.map(r=>r.slice(n))}
+const mulF=(A,B)=>A.map(r=>B[0].map((_,j)=>r.reduce((s,x,k)=>fadd(s,fmul(x,B[k][j])),F(0))));
+function charPoly(A){const n=A.length;if(n===2){const tr=fadd(A[0][0],A[1][1]),dt=fsub(fmul(A[0][0],A[1][1]),fmul(A[0][1],A[1][0]));return{q:[F(1),fmul(F(-1),tr),dt],tr,det:dt}}
+ const m=(i,j,k,l)=>fsub(fmul(A[i][k],A[j][l]),fmul(A[i][l],A[j][k]));const tr=fadd(fadd(A[0][0],A[1][1]),A[2][2]),c2=fadd(fadd(m(0,1,0,1),m(0,2,0,2)),m(1,2,1,2));
+ const dt=fadd(fsub(fmul(A[0][0],m(1,2,1,2)),fmul(A[0][1],m(1,2,0,2))),fmul(A[0][2],m(1,2,0,1)));return{q:[F(1),fmul(F(-1),tr),c2,fmul(F(-1),dt)],tr,det:dt,c2}}
+const evalP=(q,x)=>q.reduce((s,c)=>fadd(fmul(s,x),c),F(0));
+function divisors(n){n=Math.abs(n);if(n>200000)return[1];const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d}
+function ratRoot(q){const L=q.reduce((l,c)=>l*c[1]/gcd(l,c[1]),1),ints=q.map(c=>c[0]*(L/c[1])),a0=ints[ints.length-1];if(a0===0)return F(0);
+ for(const p of divisors(a0))for(const s of divisors(ints[0]))for(const sg of[1,-1]){const r=F(sg*p,s);if(fz(evalP(q,r)))return r}return null}
+function deflate(q,r){const o=[q[0]];for(let i=1;i<q.length-1;i++)o.push(fadd(q[i],fmul(o[i-1],r)));return o}
+const isq=n=>{if(n<0)return null;const s=Math.round(Math.sqrt(n));return s*s===n?s:null};
+const sqrtF=x=>{const a=isq(x[0]),b=isq(x[1]);return a!==null&&b!==null?F(a,b):null};
+function rad(u){const sd=isq(u[1]);if(sd!==null)return`√${u[0]}`+(sd>1?`/${sd}`:'');return`√${fp(u)}`}
+function quadRoots(b,c){const disc=fsub(fmul(b,b),fmul(F(4),c)),re=fdiv(fmul(F(-1),b),F(2));if(fz(disc))return[{t:'r',v:re},{t:'r',v:re}];const und=fdiv(disc,F(4));
+ if(disc[0]>0){const s=sqrtF(und);if(s)return[{t:'r',v:fadd(re,s)},{t:'r',v:fsub(re,s)}];const a=Math.sqrt(fnum(und));return[{t:'i',re,und,sg:1,x:fnum(re)+a},{t:'i',re,und,sg:-1,x:fnum(re)-a}]}
+ const u2=fmul(F(-1),und);return[{t:'c',re,und:u2,sq:sqrtF(u2),x:fnum(re),im:Math.sqrt(fnum(u2))}]}
+function rootsOf(q){if(q.length===3)return{roots:quadRoots(q[1],q[2]),rat:null};const r=ratRoot(q);if(r){const d=deflate(q,r);return{roots:[{t:'r',v:r},...quadRoots(d[1],d[2])],rat:r}}
+ const qn=q.map(fnum),fx=x=>((x+qn[1])*x+qn[2])*x+qn[3],B=1+Math.max(...qn.slice(1).map(Math.abs));let lo=-B,hi=B;for(let i=0;i<200;i++){const m=(lo+hi)/2;if(fx(m)<0)lo=m;else hi=m}const r0=(lo+hi)/2,b1=qn[1]+r0,c1=qn[2]+r0*b1,ds=b1*b1-4*c1;
+ const rs=[{t:'n',x:r0}];if(ds>=-1e-12){const s=Math.sqrt(Math.max(0,ds));rs.push({t:'n',x:(-b1+s)/2},{t:'n',x:(-b1-s)/2})}else rs.push({t:'nc',x:-b1/2,im:Math.sqrt(-ds)/2});return{roots:rs,rat:null}}
+function rootLabel(o){if(o.t==='r')return fs(o.v);if(o.t==='i')return(fz(o.re)?(o.sg>0?'':'−'):fs(o.re)+(o.sg>0?' + ':' − '))+rad(o.und);if(o.t==='c')return`${fz(o.re)?'':fs(o.re)+' '}± ${o.sq?(fone(o.sq)?'':fs(o.sq)):rad(o.und)}i`;if(o.t==='n')return'≈ '+o.x.toFixed(4).replace('-','−');return`≈ ${o.x.toFixed(4)} ± ${o.im.toFixed(4)}i`.replace('-','−')}
+function buildEig(){$('eg-n').value=EGS.n;$('egpresets').innerHTML='';EGP[EGS.n].forEach(([en,es,M])=>{const b=document.createElement('button');b.textContent=T(en,es);b.onclick=()=>loadEig(M.map(r=>r.map(String)),true);$('egpresets').appendChild(b)});
+ let h='';for(let i=0;i<EGS.n;i++)h+='<tr>'+Array.from({length:EGS.n},(_,j)=>`<td><input id="eg-${i}-${j}" data-i="${i}" data-j="${j}" value="${EGS.M[i][j]}" inputmode="decimal" autocomplete="off" aria-label="A ${i+1},${j+1}"></td>`).join('')+'</tr>';
+ $('egmat').innerHTML=h;$('egmat').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{EGS.M[+inp.dataset.i][+inp.dataset.j]=inp.value;computeEig()}))}
+function resizeEig(){const n=+$('eg-n').value;EGS={n,M:Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>(EGS.M[i]&&EGS.M[i][j]!==undefined)?EGS.M[i][j]:(i===j?'1':'0')))};buildEig();computeEig()}
+function loadEig(M,stay){EGS={n:M.length,M:M.map(r=>r.map(String))};buildEig();computeEig();if(!stay)showTab('eig')}
+function computeEig(){const n=EGS.n,bad=[];const A=EGS.M.map((r,i)=>r.map((s,j)=>{const x=parseF(s);if(!x)bad.push([i,j]);return x}));
+ $('egmat').querySelectorAll('input').forEach(i=>i.classList.remove('bad'));
+ if(bad.length){bad.forEach(([i,j])=>$(`eg-${i}-${j}`).classList.add('bad'));$('egerr').textContent=T('Use integers, decimals or fractions like 3/4 in every cell.','Usa enteros, decimales o fracciones como 3/4 en cada casilla.');return}
+ $('egerr').textContent='';save('eig',EGS);
+ const{q,tr,det,c2}=charPoly(A),{roots,rat}=rootsOf(q),An=A.map(r=>r.map(fnum));
+ const E=[];roots.forEach(o=>{if(o.t==='r'){const e=E.find(x=>x.ex&&feq(x.ex,o.v));if(e)e.m++;else E.push({lab:fs(o.v),x:fnum(o.v),ex:o.v,m:1,real:true})}
+  else if(o.t==='i'||o.t==='n'){const e=E.find(x=>!x.ex&&x.real&&Math.abs(x.x-o.x)<1e-7);if(e)e.m++;else E.push({lab:rootLabel(o),x:o.x,ex:null,m:1,real:true,approx:o.t==='n'})}
+  else E.push({lab:rootLabel(o),re:o.x,im:o.im,real:false,m:2})});
+ let out='';
+ const pq=n===3?q.map(c=>fmul(F(-1),c)):q;
+ out+=`<div><h4>${T('1. Characteristic polynomial','1. Polinomio característico')}</h4><div class="how"><code>|A − λI| = ${polyStr(pq)}</code><br>`+(n===2?T('For 2×2 it is always λ² − (tr A)λ + det A, with','En 2×2 siempre es λ² − (tr A)λ + det A, con')+` <code>tr A = ${fs(tr)}</code>, <code>det A = ${fs(det)}</code>.`:T('For 3×3 it is −λ³ + (tr A)λ² − Mλ + det A, where M is the sum of the three principal 2×2 minors:','En 3×3 es −λ³ + (tr A)λ² − Mλ + det A, donde M es la suma de los tres menores principales 2×2:')+` <code>tr A = ${fs(tr)}</code>, <code>M = ${fs(c2)}</code>, <code>det A = ${fs(det)}</code>.`+(rat?'<br>'+T(`Rational root test: trying the divisors of the constant term shows that λ = ${fs(rat)} is a root. Divide by (λ − ${fs(rat)}) and solve the remaining quadratic.`,`Raíces racionales: probando los divisores del término independiente, λ = ${fs(rat)} es raíz. Divide entre (λ − ${fs(rat)}) con la regla de Ruffini y resuelve la ecuación de segundo grado que queda.`):''))+`</div></div>`;
+ out+=`<div><h4>${T('2. Eigenvalues','2. Valores propios')}</h4><div class="how">`+E.map(e=>e.real?`<code>λ ${e.lab.startsWith('≈')?e.lab:'= '+e.lab}</code>${e.ex||e.approx?'':` <span class="hint">≈ ${f(e.x)}</span>`} · ${T('algebraic multiplicity','multiplicidad algebraica')} ${e.m}`:`<code>λ = ${e.lab}</code> · ${T('complex pair: no real eigenvectors','par complejo: sin vectores propios reales')}`).join('<br>')+`</div></div>`;
+ let gsum=0;const cols=[],Dg=[],colsN=[],DgN=[],exact=E.every(e=>!e.real||e.ex);let hasCx=E.some(e=>!e.real);const defect=[];
+ let ev='';E.filter(e=>e.real).forEach(e=>{let vecs,rk,Mshow;
+  if(e.ex){const M=A.map((r,i)=>r.map((x,j)=>i===j?fsub(x,e.ex):x));vecs=nullF(M);Mshow=matHTML(M,fs);ev+=`<code>λ = ${e.lab}</code>: A − (${e.lab})I = ${Mshow}<br>`}
+  else{const M=An.map((r,i)=>r.map((x,j)=>i===j?x-e.x:x));vecs=nullN(M);ev+=`<code>λ ${e.lab.startsWith('≈')?e.lab:'= '+e.lab}</code>: ${T('approximate values','valores aproximados')}<br>`}
+  rk=n-vecs.length;gsum+=vecs.length;if(vecs.length<e.m)defect.push(e);
+  ev+=T(`rank ${rk}, so dim E(λ) = ${n} − ${rk} = ${vecs.length}`,`rango ${rk}, así que dim E(λ) = ${n} − ${rk} = ${vecs.length}`)+` · <code>E(λ) = span{${vecs.map(v=>e.ex?vF(v):`(${v.map(x=>x.toFixed(3).replace('-','−')).join(', ')})`).join(', ')}}</code>`+(vecs.length<e.m?` <span style="color:var(--bad)">${T('(fewer eigenvectors than its multiplicity)','(menos vectores propios que su multiplicidad)')}</span>`:'')+'<br><br>';
+  vecs.forEach(v=>{cols.push(v);Dg.push(e.ex||e.x);colsN.push(e.ex?v.map(fnum):v);DgN.push(e.x)})});
+ out+=`<div><h4>${T('3. Eigenvectors','3. Vectores propios')}</h4><div class="how">${ev||T('There are no real eigenvalues, so there are no real eigenvectors.','No hay valores propios reales, así que no hay vectores propios reales.')}</div></div>`;
+ const diag=!hasCx&&gsum===n;let dg='';
+ if(diag){if(exact){const Pm=Array.from({length:n},(_,i)=>cols.map(c=>c[i])),D=Dg.map((l,i)=>Dg.map((_,j)=>i===j?l:F(0))),Pi=invF(Pm),ok=Pi&&mulF(mulF(Pm,D),Pi).every((r,i)=>r.every((x,j)=>feq(x,A[i][j])));
+   dg=`<span class="pill ok">${T('✓ Diagonalizable','✓ Diagonalizable')}</span><br><br>`+T('Put the eigenvectors as the columns of P and the eigenvalues, in the same order, on the diagonal of D:','Pon los vectores propios como columnas de P y los valores propios, en el mismo orden, en la diagonal de D:')+`<br>P = ${matHTML(Pm,fs)} D = ${matHTML(D,fs)} P⁻¹ = ${matHTML(Pi,fs)}<br>`+(ok?T('Check: P·D·P⁻¹ = A ✓','Comprobación: P·D·P⁻¹ = A ✓'):'');
+   cols._ex=Pm}
+  else{const Pm=Array.from({length:n},(_,i)=>colsN.map(c=>c[i])),D=DgN.map((l,i)=>DgN.map((_,j)=>i===j?l:0));dg=`<span class="pill ok">${T('✓ Diagonalizable','✓ Diagonalizable')}</span><br><br>`+T('With approximate values:','Con valores aproximados:')+`<br>P ≈ ${matHTML(Pm,x=>x.toFixed(3).replace('-','−'))} D ≈ ${matHTML(D,x=>x.toFixed(3).replace('-','−'))}`}
+  if(E.filter(e=>e.real).length===n)dg+='<br>'+T(`All ${n} eigenvalues are different, which already guarantees diagonalizability.`,`Los ${n} valores propios son distintos, lo que ya garantiza que es diagonalizable.`)}
+ else{dg=`<span class="pill">${T('✗ Not diagonalizable over ℝ','✗ No diagonalizable en ℝ')}</span><br><br>`;if(hasCx)dg+=T('It has complex eigenvalues. Over ℂ it would be diagonalizable if they are distinct, but not with real matrices.','Tiene valores propios complejos. En ℂ sería diagonalizable si son distintos, pero no con matrices reales.');
+  defect.forEach(e=>{dg+=(hasCx?'<br>':'')+T(`λ = ${e.lab} has algebraic multiplicity ${e.m} but only ${gsumOf(e)} independent eigenvector${gsumOf(e)>1?'s':''}. Diagonalizable needs them equal for every eigenvalue.`,`λ = ${e.lab} tiene multiplicidad algebraica ${e.m} pero solo ${gsumOf(e)} vector${gsumOf(e)>1?'es':''} propio${gsumOf(e)>1?'s':''} independiente${gsumOf(e)>1?'s':''}. Para diagonalizar deben coincidir en cada valor propio.`)})}
+ function gsumOf(e){return e.ex?nullF(A.map((r,i)=>r.map((x,j)=>i===j?fsub(x,e.ex):x))).length:nullN(An.map((r,i)=>r.map((x,j)=>i===j?x-e.x:x))).length}
+ const sym=A.every((r,i)=>r.every((x,j)=>feq(x,A[j][i])));
+ if(sym)dg+='<br><br>'+T('A is symmetric, so it is always diagonalizable, with real eigenvalues and orthogonal eigenvectors for different eigenvalues (spectral theorem). Normalizing them gives an orthogonal P, so P⁻¹ = Pᵀ.','A es simétrica, así que siempre es diagonalizable, con valores propios reales y vectores propios ortogonales para valores distintos (teorema espectral). Al normalizarlos, P es ortogonal y P⁻¹ = Pᵀ.');
+ let btns='<div class="row" style="margin-top:12px">';if(sym&&diag&&exact)btns+=`<button onclick="loadGS(${n},EIGP,${n+1})">${T('Orthonormalize the eigenvectors →','Ortonormalizar los vectores propios →')}</button>`;if(n===2)btns+=`<button onclick="loadMaps(EIGA)">${T('See A as a map of the plane →','Ver A como aplicación del plano →')}</button>`;btns+='</div>';
+ window.EIGP=cols._ex?Array.from({length:n},(_,j)=>cols._ex.map(r=>fnum(r[j]))):null;window.EIGA=An;
+ out+=`<div><h4>${T('4. Diagonalization','4. Diagonalización')}</h4><div class="how">${dg}</div>${btns}</div>`;
+ $('egsteps').innerHTML=out;
+ let sumR=0,sumI='',prod=1;roots.forEach(o=>{if(o.t==='c'||o.t==='nc'){sumR+=2*o.x;prod*=o.x*o.x+o.im*o.im}else{const x=o.t==='r'?fnum(o.v):o.x;sumR+=x;prod*=x}});
+ $('egcheck').innerHTML=T('Sum of eigenvalues = trace:','Suma de valores propios = traza:')+` <code>${f(sumR)} = ${fs(tr)}</code><br>`+T('Product of eigenvalues = determinant:','Producto de valores propios = determinante:')+` <code>${f(prod)} = ${fs(det)}</code><br>`+(fz(det)?T('det A = 0, so λ = 0 is an eigenvalue and A is not invertible.','det A = 0, así que λ = 0 es valor propio y A no es invertible.'):T('det A ≠ 0, so 0 is not an eigenvalue and A is invertible.','det A ≠ 0, así que 0 no es valor propio y A es invertible.'))}
+function polyStr(cs){const deg=cs.length-1;let s='';cs.forEach((c,i)=>{if(fz(c))return;const p=deg-i,neg=c[0]<0,a=[Math.abs(c[0]),c[1]],coef=(p>0&&fone(a))?'':fs(a),tm=coef+(p>0?['','λ','λ²','λ³'][p]:'');s+=s===''?(neg?'−':'')+tm:(neg?' − ':' + ')+tm});return s||'0'}
+
+/* ================= SYSTEMS ================= */
+const VARS=['x','y','z','t','u'],PARS=['λ','μ','ν','ρ','σ'];
+const ptrim=p=>{const q=p.slice();while(q.length&&fz(q[q.length-1]))q.pop();return q};
+const padd=(p,q)=>ptrim(Array.from({length:Math.max(p.length,q.length)},(_,i)=>fadd(p[i]||F(0),q[i]||F(0))));
+const pmul=(p,q)=>{if(!p.length||!q.length)return[];const r=Array.from({length:p.length+q.length-1},()=>F(0));p.forEach((a,i)=>q.forEach((b,j)=>{r[i+j]=fadd(r[i+j],fmul(a,b))}));return ptrim(r)};
+const pneg=p=>p.map(x=>fmul(F(-1),x));
+const peval=(p,x)=>p.reduceRight((s,c)=>fadd(fmul(s,x),c),F(0));
+function parsePoly(s){s=String(s).replace(/\s+/g,'').replace(/−/g,'-').replace(/,/g,'.').replace(/²/g,'^2').replace(/³/g,'^3');if(!s)return null;const terms=s.match(/[+-]?[^+-]+/g);if(!terms||terms.join('')!==s)return null;let p=[];
+ for(const t of terms){const m=t.match(/^([+-]?)(\d+(?:\.\d+)?(?:\/\d+)?|\.\d+)?\*?(a(?:\^(\d))?)?$/);if(!m||(!m[2]&&!m[3]))return null;let c=m[2]?parseF(m[2]):F(1);if(!c)return null;if(m[1]==='-')c=fmul(F(-1),c);const pw=m[3]?(m[4]?+m[4]:1):0;if(pw>5)return null;while(p.length<=pw)p.push(F(0));p[pw]=fadd(p[pw],c)}return ptrim(p)}
+function pdet(M){const n=M.length;if(n===1)return M[0][0];let d=[];for(let j=0;j<n;j++){if(!M[0][j].length)continue;let t=pmul(M[0][j],pdet(M.slice(1).map(r=>r.filter((_,k)=>k!==j))));if(j%2)t=pneg(t);d=padd(d,t)}return d}
+function pstr(p,v='a'){let s='';for(let i=p.length-1;i>=0;i--){const c=p[i];if(fz(c))continue;const neg=c[0]<0,a=[Math.abs(c[0]),c[1]],coef=(i>0&&fone(a))?'':fs(a),tm=coef+(i===0?'':i===1?v:v+['','','²','³','⁴','⁵'][i]);s+=s===''?(neg?'−':'')+tm:(neg?' − ':' + ')+tm}return s||'0'}
+function pRoots(p0){let p=ptrim(p0);const roots=[];if(p.length<2)return{roots,approx:[]};if(fz(p[0])){roots.push(F(0));while(p.length>1&&fz(p[0]))p=p.slice(1)}
+ for(let guard=0;guard<8&&p.length>1;guard++){const hi=p.slice().reverse(),r=ratRoot(hi);if(!r)break;if(!roots.some(x=>feq(x,r)))roots.push(r);p=deflate(hi,r).reverse()}
+ const approx=[];if(p.length>1){const c=p.map(fnum),lead=c[c.length-1],B=1+Math.max(...c.slice(0,-1).map(x=>Math.abs(x/lead))),ev=x=>c.reduceRight((s,k)=>s*x+k,0);let px=-B,pv=ev(px);for(let i=1;i<=4000;i++){const x=-B+2*B*i/4000,v=ev(x);if(pv===0||pv*v<0){let lo=px,hi2=x;for(let k=0;k<80;k++){const mid=(lo+hi2)/2;if(ev(lo)*ev(mid)<=0)hi2=mid;else lo=mid}approx.push((lo+hi2)/2)}px=x;pv=v}}
+ return{roots,approx}}
+function combos(n,k){const out=[],cur=[];(function rec(s){if(cur.length===k){out.push(cur.slice());return}for(let i=s;i<n;i++){cur.push(i);rec(i+1);cur.pop()}})(0);return out}
+function classify(A,b,n){const rA=rrefF(A).piv.length,aug=A.map((r,i)=>[...r,b[i]]),RG=rrefF(aug),rG=RG.piv.length,type=rA<rG?'SI':rA===n?'SCD':'SCI';
+ if(type==='SI')return{type,rA,rG,R:RG.R};const piv=RG.piv,free=[];for(let j=0;j<n;j++)if(!piv.includes(j))free.push(j);
+ const sol=Array.from({length:n},(_,j)=>{const fi=free.indexOf(j);if(fi>=0)return{c:F(0),k:free.map((_,q)=>F(q===fi?1:0))};const i=piv.indexOf(j);return{c:RG.R[i][n],k:free.map(fj=>fmul(F(-1),RG.R[i][fj]))}});return{type,rA,rG,R:RG.R,free,sol}}
+function linStr(c,ks,names){let s=fz(c)?'':fs(c);ks.forEach((k,q)=>{if(fz(k))return;const neg=k[0]<0,a=[Math.abs(k[0]),k[1]],tm=(fone(a)?'':fs(a))+names[q];s+=s===''?(neg?'−':'')+tm:(neg?' − ':' + ')+tm});return s||'0'}
+const augHTML=(M,n,fmt=fs)=>`<span class="mini aug"><span class="br l"></span><table>${M.map(r=>`<tr>${r.map((x,j)=>`<td class="${j===n?'bar':''}">${fmt(x)}</td>`).join('')}</tr>`).join('')}</table><span class="br r"></span></span>`;
+const typeName=t=>({SCD:T('Consistent with a unique solution (SCD)','Sistema compatible determinado (SCD)'),SCI:T('Consistent with infinitely many solutions (SCI)','Sistema compatible indeterminado (SCI)'),SI:T('Inconsistent: no solution (SI)','Sistema incompatible (SI)')})[t];
+function rfReason(c,n){if(c.type==='SI')return T(`rank A = ${c.rA} < rank A* = ${c.rG}, so the equations contradict each other.`,`rango A = ${c.rA} < rango A* = ${c.rG}, así que las ecuaciones se contradicen.`);if(c.type==='SCD')return T(`rank A = rank A* = ${c.rA} = number of unknowns.`,`rango A = rango A* = ${c.rA} = número de incógnitas.`);return T(`rank A = rank A* = ${c.rA} < ${n} unknowns, so there ${n-c.rA===1?'is 1 free parameter':`are ${n-c.rA} free parameters`}.`,`rango A = rango A* = ${c.rA} < ${n} incógnitas, así que hay ${n-c.rA} parámetro${n-c.rA>1?'s':''} libre${n-c.rA>1?'s':''}.`)}
+function solHTML(c,n){if(c.type==='SI')return'';const lines=c.sol.map((s,j)=>`<code>${VARS[j]} = ${linStr(s.c,s.k,PARS)}</code>`).join('<br>');return lines+(c.type==='SCI'?'<br>'+T(`with ${PARS.slice(0,c.free.length).join(', ')} ∈ ℝ.`,`con ${PARS.slice(0,c.free.length).join(', ')} ∈ ℝ.`):'')}
+const SYP=[['Parameter a','Parámetro a',[['a','1','1'],['1','a','1'],['1','1','a']],['1','1','1']],['Unique solution','Solución única',[['1','1','1'],['2','-1','1'],['1','2','-1']],['6','3','2']],['Infinitely many','Infinitas soluciones',[['1','1','1'],['1','-1','2'],['2','0','3']],['3','2','5']],['Incompatible','Incompatible',[['1','1','1'],['1','-1','2'],['2','0','3']],['3','2','6']],['3 equations, 2 unknowns','3 ecuaciones, 2 incógnitas',[['1','1'],['1','-1'],['2','1']],['3','1','5']],['Parameter in b','Parámetro en b',[['1','1','1'],['1','2','3'],['2','3','4']],['1','2','a']]];
+let SY=load('sys')||{A:SYP[0][2],b:SYP[0][3]};
+function buildSys(){const m=SY.A.length,n=SY.A[0].length;$('sy-m').innerHTML=[1,2,3,4,5].map(i=>`<option ${i===m?'selected':''}>${i}</option>`).join('');$('sy-n').innerHTML=[1,2,3,4,5].map(i=>`<option ${i===n?'selected':''}>${i}</option>`).join('');
+ $('symat').innerHTML=SY.A.map((r,i)=>`<tr class="sysrow">${r.map((s,j)=>`<td><input id="sy-${i}-${j}" data-i="${i}" data-j="${j}" value="${s}" autocomplete="off" aria-label="${T('equation','ecuación')} ${i+1}, ${VARS[j]}"></td><td class="var">${VARS[j]}${j<n-1?' +':' ='}</td>`).join('')}<td><input id="sy-${i}-b" data-i="${i}" data-j="b" value="${SY.b[i]}" autocomplete="off" aria-label="${T('equation','ecuación')} ${i+1}, ${T('right-hand side','término independiente')}"></td></tr>`).join('');
+ $('symat').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{if(inp.dataset.j==='b')SY.b[+inp.dataset.i]=inp.value;else SY.A[+inp.dataset.i][+inp.dataset.j]=inp.value;computeSys()}));
+ $('sypresets').innerHTML='';SYP.forEach(([en,es,A,b])=>{const bt=document.createElement('button');bt.textContent=T(en,es);bt.onclick=()=>loadSys(A,b,true);$('sypresets').appendChild(bt)})}
+function resizeSys(){const m=+$('sy-m').value,n=+$('sy-n').value;SY={A:Array.from({length:m},(_,i)=>Array.from({length:n},(_,j)=>(SY.A[i]&&SY.A[i][j]!==undefined)?SY.A[i][j]:'0')),b:Array.from({length:m},(_,i)=>SY.b[i]!==undefined?SY.b[i]:'0')};buildSys();computeSys()}
+function loadSys(A,b,stay){SY={A:A.map(r=>r.map(String)),b:b.map(String)};buildSys();computeSys();if(!stay)showTab('sys')}
+function computeSys(){const m=SY.A.length,n=SY.A[0].length,bad=[];const A=SY.A.map((r,i)=>r.map((s,j)=>{const p=parsePoly(s);if(!p)bad.push(`sy-${i}-${j}`);return p})),b=SY.b.map((s,i)=>{const p=parsePoly(s);if(!p)bad.push(`sy-${i}-b`);return p});
+ $('symat').querySelectorAll('input').forEach(i=>i.classList.toggle('bad',bad.includes(i.id)));if(bad.length){$('syerr').textContent=T('Use numbers, fractions or expressions in a like 2a+1 or a^2.','Usa números, fracciones o expresiones en a como 2a+1 o a^2.');return}
+ $('syerr').textContent='';save('sys',SY);const hasA=[...A.flat(),...b].some(p=>p.length>1),at=x=>p=>peval(p,x);let out='';
+ const eqs=A.map((r,i)=>{let s='';r.forEach((p,j)=>{if(!p.length)return;const k=p.length===1?p[0]:null;if(k){const neg=k[0]<0,a=[Math.abs(k[0]),k[1]];s+=(s===''?(neg?'−':''):(neg?' − ':' + '))+(fone(a)?'':fs(a))+VARS[j]}else if(p.filter(c=>!fz(c)).length===1){const neg=p[p.length-1][0]<0,q=neg?pneg(p):p;s+=(s===''?(neg?'−':''):(neg?' − ':' + '))+pstr(q)+VARS[j]}else s+=(s===''?'':' + ')+`(${pstr(p)})${VARS[j]}`});return`<code>${s||'0'} = ${pstr(b[i])}</code>`}).join('<br>');
+ out+=`<div><h4>${T('The system','El sistema')}</h4><div class="how">${eqs}</div></div>`;
+ if(!hasA){const A0=A.map(r=>r.map(at(F(0)))),b0=b.map(at(F(0))),c=classify(A0,b0,n);
+  out+=`<div><h4>${T('1. Augmented matrix A* = (A | b)','1. Matriz ampliada A* = (A | b)')}</h4><div class="how">${augHTML(A0.map((r,i)=>[...r,b0[i]]),n)}</div></div>`;
+  out+=`<div><h4>${T('2. Reduced form','2. Forma reducida')}</h4><div class="how">${augHTML(c.R,n)}<br>${T(`rank A = ${c.rA}, rank A* = ${c.rG}, unknowns n = ${n}`,`rango A = ${c.rA}, rango A* = ${c.rG}, incógnitas n = ${n}`)}</div></div>`;
+  out+=`<div><h4>${T('3. Rouché–Frobenius','3. Rouché–Frobenius')}</h4><div class="how"><span class="pill ${c.type==='SI'?'':'ok'}">${typeName(c.type)}</span><br><br>${rfReason(c,n)}</div></div>`;
+  if(c.type!=='SI')out+=`<div><h4>${T('4. Solution','4. Solución')}</h4><div class="how">${solHTML(c,n)}</div></div>`;
+  out+=`<div class="row"><button onclick="loadElim(SYAUG)">${T('Row reduction step by step →','Reducción por filas paso a paso →')}</button></div>`;window.SYAUG=A0.map((r,i)=>[...r,b0[i]].map(fs));$('syout').innerHTML=out;return}
+ const polys=[];for(let k=1;k<=Math.min(m,n+1);k++)for(const R of combos(m,k))for(const C of combos(n+1,k)){const d=pdet(R.map(i=>C.map(j=>j<n?A[i][j]:b[i])));if(d.length>1)polys.push(d)}
+ let crit=[],approx=[];polys.forEach(p=>{const r=pRoots(p);r.roots.forEach(x=>{if(!crit.some(y=>feq(x,y)))crit.push(x)});r.approx.forEach(x=>{if(!approx.some(y=>Math.abs(x-y)<1e-6))approx.push(x)})});crit.sort((x,y)=>fnum(x)-fnum(y));approx=approx.filter(x=>!crit.some(c=>Math.abs(fnum(c)-x)<1e-6));
+ let g=F(7919,13);for(const cand of[F(7919,13),F(104729,17),F(15485863,29)]){if(polys.every(p=>!fz(peval(p,cand)))){g=cand;break}}
+ const sub=x=>[A.map(r=>r.map(at(x))),b.map(at(x))],gc=classify(...sub(g),n);
+ crit=crit.filter(c=>{const cl=classify(...sub(c),n);return cl.rA!==gc.rA||cl.rG!==gc.rG});
+ let st='';if(m===n){const dA=pdet(A),rr=pRoots(dA);st+=`<code>|A| = ${pstr(dA)}</code>`+(dA.length>1?` ${T('vanishes for','se anula para')} <code>a ∈ {${[...rr.roots.map(fs),...rr.approx.map(x=>'≈ '+x.toFixed(3))].join(', ')}}</code>`:'')+'<br>'}
+ st+=crit.length?T(`The ranks can only change where some minor of A or A* vanishes. Checking those values, they actually change for a ∈ {${crit.map(fs).join(', ')}}.`,`Los rangos solo pueden cambiar donde se anula algún menor de A o de A*. Comprobando esos valores, cambian de verdad para a ∈ {${crit.map(fs).join(', ')}}.`):T('The ranks are the same for every rational value of a, so there is a single case.','Los rangos son los mismos para todo valor racional de a, así que hay un único caso.');
+ if(approx.length)st+='<br>'+T(`Some minors also vanish at irrational values a ≈ ${approx.map(x=>x.toFixed(4)).join(', ')}; study those by hand.`,`Algunos menores se anulan también en valores irracionales a ≈ ${approx.map(x=>x.toFixed(4)).join(', ')}; estúdialos a mano.`);
+ out+=`<div><h4>${T('1. Critical values of a','1. Valores críticos de a')}</h4><div class="how">${st}</div></div>`;
+ let cases=`<div class="case"><div class="t">${crit.length?`a ∉ {${crit.map(fs).join(', ')}}`:T('Any a','Cualquier a')}</div><div class="how"><span class="pill ${gc.type==='SI'?'':'ok'}">${typeName(gc.type)}</span> ${rfReason(gc,n)}${gc.type==='SCD'?' '+T('The solution depends on a (use Cramer\'s rule).','La solución depende de a (usa la regla de Cramer).'):gc.type==='SCI'?' '+T('The solution depends on a.','La solución depende de a.'):''}</div></div>`;
+ crit.forEach(c=>{const cl=classify(...sub(c),n);cases+=`<div class="case"><div class="t">a = ${fs(c)}</div><div class="how"><span class="pill ${cl.type==='SI'?'':'ok'}">${typeName(cl.type)}</span> ${rfReason(cl,n)}<br>${T('Reduced A*:','A* reducida:')} ${augHTML(cl.R,n)}${cl.type!=='SI'?'<br>'+solHTML(cl,n):''}</div></div>`});
+ out+=`<div><h4>${T('2. Discussion','2. Discusión')}</h4><div class="steps" style="gap:10px">${cases}</div></div>`;
+ out+=`<p class="hint" style="margin:0">${T('For each critical value, substitute it into the original system and reduce again.','Para cada valor crítico, sustitúyelo en el sistema original y vuelve a reducir.')}</p>`;
+ $('syout').innerHTML=out}
+
+/* ================= SUBSPACES ================= */
+const SBP=[['Two planes in ℝ³','Dos planos en ℝ³',3,{mode:'gen',M:[['1','0'],['0','1'],['1','1']]},{mode:'eq',M:[['1','-1','0']]}],['Plane ⊕ line','Plano ⊕ recta',3,{mode:'eq',M:[['1','1','1']]},{mode:'gen',M:[['1'],['1'],['1']]}],['Redundant generators','Generadores redundantes',3,{mode:'gen',M:[['1','2','1'],['2','4','0'],['3','6','1']]},{mode:'gen',M:[['0'],['1'],['1']]}],['In ℝ⁴','En ℝ⁴',4,{mode:'gen',M:[['1','0'],['0','1'],['1','0'],['0','1']]},{mode:'eq',M:[['1','1','-1','-1'],['1','0','0','-1']]}]];
+let SB=load('sub')||{n:3,U:JSON.parse(JSON.stringify(SBP[0][3])),W:JSON.parse(JSON.stringify(SBP[0][4]))};
+const kOf=(P,n)=>P.mode==='gen'?P.M[0].length:P.M.length;
+function eqStr(c){let s='';c.forEach((k,j)=>{if(fz(k))return;const neg=k[0]<0,a=[Math.abs(k[0]),k[1]],tm=(fone(a)?'':fs(a))+VARS[j];s+=s===''?(neg?'−':'')+tm:(neg?' − ':' + ')+tm});return(s||'0')+' = 0'}
+function buildSubPart(key){const P=SB[key],n=SB.n,k=kOf(P,n),gen=P.mode==='gen';
+ let h=`<div class="subhead"><b>${key}</b><div class="seg" role="group"><button aria-pressed="${gen}" onclick="setSubMode('${key}','gen')">${T('Spanned by vectors','Generado por vectores')}</button><button aria-pressed="${!gen}" onclick="setSubMode('${key}','eq')">${T('Implicit equations','Ecuaciones implícitas')}</button></div><select id="sb-${key}-k" aria-label="${gen?T('Number of vectors','Número de vectores'):T('Number of equations','Número de ecuaciones')}" onchange="setSubK('${key}',+this.value)">${[1,2,3,4].map(i=>`<option ${i===k?'selected':''} value="${i}">${i} ${gen?T('vector'+(i>1?'s':''),'vector'+(i>1?'es':'')):T('equation'+(i>1?'s':''),'ecuaci'+(i>1?'ones':'ón'))}</option>`).join('')}</select></div>`;
+ if(gen)h+=`<div class="matwrap"><span class="br l"></span><table class="mat"><tr>${Array.from({length:k},(_,j)=>`<th style="color:${col(j)}">${key.toLowerCase()}${sub_(j)}</th>`).join('')}</tr>${P.M.map((r,i)=>`<tr>${r.map((s,j)=>`<td><input id="sb-${key}-${i}-${j}" data-i="${i}" data-j="${j}" value="${s}" inputmode="decimal" autocomplete="off" aria-label="${key}, ${T('vector','vector')} ${j+1}, ${T('coordinate','coordenada')} ${i+1}"></td>`).join('')}</tr>`).join('')}</table><span class="br r"></span></div>`;
+ else h+=`<div class="scroll"><table class="mat">${P.M.map((r,i)=>`<tr class="sysrow">${r.map((s,j)=>`<td><input id="sb-${key}-${i}-${j}" data-i="${i}" data-j="${j}" value="${s}" inputmode="decimal" autocomplete="off" aria-label="${key}, ${T('equation','ecuación')} ${i+1}, ${VARS[j]}"></td><td class="var">${VARS[j]}${j<n-1?' +':' = 0'}</td>`).join('')}</tr>`).join('')}</table></div>`;
+ $('sb'+key).innerHTML=h;$('sb'+key).querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{SB[key].M[+inp.dataset.i][+inp.dataset.j]=inp.value;computeSub()}))}
+function shapeSub(P,n,k){const rows=P.mode==='gen'?n:k,cols=P.mode==='gen'?k:n;P.M=Array.from({length:rows},(_,i)=>Array.from({length:cols},(_,j)=>(P.M[i]&&P.M[i][j]!==undefined)?P.M[i][j]:'0'))}
+function setSubMode(key,mode){const P=SB[key];if(P.mode===mode)return;const k=kOf(P,SB.n);P.mode=mode;P.M=[];shapeSub(P,SB.n,Math.min(k,mode==='eq'?SB.n:4));P.M[0][0]='1';buildSubPart(key);computeSub()}
+function setSubK(key,k){shapeSub(SB[key],SB.n,k);buildSubPart(key);computeSub()}
+function resizeSub(){SB.n=+$('sb-n').value;['U','W'].forEach(key=>shapeSub(SB[key],SB.n,kOf(SB[key],SB.n)));buildSub();computeSub()}
+function buildSub(){$('sb-n').value=SB.n;buildSubPart('U');buildSubPart('W');$('sbpresets').innerHTML='';SBP.forEach(([en,es,n,U,W])=>{const b=document.createElement('button');b.textContent=T(en,es);b.onclick=()=>loadSub(n,U,W,true);$('sbpresets').appendChild(b)})}
+function loadSub(n,U,W,stay){SB={n,U:JSON.parse(JSON.stringify(U)),W:JSON.parse(JSON.stringify(W||SB.W))};if(!W)shapeSub(SB.W,n,kOf(SB.W,n));buildSub();computeSub();if(!stay)showTab('sub')}
+function subOf(P,n){const M=P.M.map(r=>r.map(parseF));if(M.flat().some(x=>!x))return null;
+ if(P.mode==='gen'){const k=M[0].length,cols=Array.from({length:k},(_,j)=>M.map(r=>r[j])),piv=rrefF(M).piv,basis=piv.map(j=>cols[j]);return{basis,eqs:basis.length?nullF(basis):fI(n),dim:basis.length}}
+ const{R,piv}=rrefF(M);return{basis:nullF(M),eqs:R.slice(0,piv.length).map(intV),dim:n-piv.length}}
+const spanStr=B=>B.length?`span{${B.map(vF).join(', ')}}`:'{0}';
+function paramStr(B,n){if(!B.length)return VARS.slice(0,n).map(v=>`<code>${v} = 0</code>`).join('<br>');return VARS.slice(0,n).map((v,i)=>`<code>${v} = ${linStr(F(0),B.map(b=>b[i]),PARS)}</code>`).join('<br>')}
+function computeSub(){const n=SB.n,U=subOf(SB.U,n),W=subOf(SB.W,n);document.querySelectorAll('#p-sub .mat input').forEach(i=>i.classList.toggle('bad',!parseF(i.value)));
+ if(!U||!W){$('sberr').textContent=T('Use integers, decimals or fractions in every cell.','Usa enteros, decimales o fracciones en cada casilla.');return}$('sberr').textContent='';save('sub',SB);
+ const Rn=`ℝ${['','','²','³','⁴'][n]}`;
+ const desc=(X,name)=>`<div><h4>${name}</h4><div class="how">dim ${name} = ${X.dim}${X.dim===n?T(`, so ${name} = ${Rn}`,`, así que ${name} = ${Rn}`):''}<br>${T('Basis:','Base:')} <code>${X.basis.length?`{${X.basis.map(vF).join(', ')}}`:'∅'}</code><br>${T('Implicit equations','Ecuaciones implícitas')} (${n} − ${X.dim} = ${n-X.dim}):<br>${X.eqs.length?X.eqs.map(c=>`<code>${eqStr(c)}</code>`).join('<br>'):T('none, it is the whole space','ninguna, es todo el espacio')}<br>${T('Parametric equations:','Ecuaciones paramétricas:')}<br>${paramStr(X.basis,n)}</div></div>`;
+ const all=[...U.basis,...W.basis],S=all.length?rrefF(Array.from({length:n},(_,i)=>all.map(v=>v[i]))).piv.map(j=>all[j]):[];
+ const eqs=[...U.eqs,...W.eqs],I=eqs.length?nullF(eqs):fI(n),di=I.length;
+ let out=desc(U,'U')+desc(W,'W');
+ out+=`<div><h4>U + W</h4><div class="how">${T('Join the generators of U and W and keep the independent ones:','Junta los generadores de U y W y quédate con los independientes:')}<br><code>U + W = ${spanStr(S)}</code>, dim = ${S.length}</div></div>`;
+ out+=`<div><h4>U ∩ W</h4><div class="how">${T('Join the implicit equations of U and W and solve the homogeneous system:','Junta las ecuaciones implícitas de U y W y resuelve el sistema homogéneo:')}<br><code>U ∩ W = ${spanStr(I)}</code>, dim = ${di}</div></div>`;
+ const ok=S.length===U.dim+W.dim-di;
+ out+=`<div><h4>${T('Grassmann formula','Fórmula de Grassmann')}</h4><div class="how"><code>dim(U + W) = dim U + dim W − dim(U ∩ W)</code><br><code>${S.length} = ${U.dim} + ${W.dim} − ${di}</code> ${ok?'✓':''}<br>${di===0?(S.length===n?T(`U ∩ W = {0} and U + W = ${Rn}: they are complementary subspaces, U ⊕ W = ${Rn}.`,`U ∩ W = {0} y U + W = ${Rn}: son subespacios suplementarios, U ⊕ W = ${Rn}.`):T('U ∩ W = {0}, so the sum is direct: U ⊕ W.','U ∩ W = {0}, así que la suma es directa: U ⊕ W.')):T('U ∩ W ≠ {0}, so the sum is not direct.','U ∩ W ≠ {0}, así que la suma no es directa.')}</div></div>`;
+ $('sbout').innerHTML=out}
+
+/* ================= CHANGE OF BASIS ================= */
+CV.forEach((c,i)=>{const m=mk('marker',{id:'cb'+i,viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:5,markerHeight:5,orient:'auto'},$('cbdefs'));const p=mk('path',{d:'M1 1L9 5L1 9Z'},m);p.style.fill=col(i)});
+const CBP=[['Rotated basis','Base girada',2,[['1','-1'],['1','1']],['3','1'],[['2','1'],['1','2']]],['Skewed basis','Base oblicua',2,[['2','1'],['1','1']],['3','2'],[['1','1'],['0','2']]],['Eigenbasis of A','Base propia de A',2,[['1','1'],['1','-1']],['3','1'],[['2','1'],['1','2']]],['Example in ℝ³','Ejemplo en ℝ³',3,[['1','0','1'],['0','1','1'],['1','1','0']],['2','3','1'],[['1','0','0'],['0','2','0'],['0','0','3']]]];
+const idS=n=>Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?'1':'0'));
+let CB=load('basis')||{n:2,B:CBP[0][3],C:idS(2),v:CBP[0][4],A:CBP[0][5]},cbdrag=false;
+function cbGrid(key,M,heads,rowLab){return`<table class="mat"><tr><td></td>${heads.map((h,j)=>`<th style="color:${col(j)}">${h}</th>`).join('')}</tr>${M.map((r,i)=>`<tr><td class="rl">${rowLab?rowLab[i]:''}</td>${r.map((s,j)=>`<td><input id="cb-${key}-${i}-${j}" data-k="${key}" data-i="${i}" data-j="${j}" value="${s}" inputmode="decimal" autocomplete="off" aria-label="${key} ${i+1},${j+1}"></td>`).join('')}</tr>`).join('')}</table>`}
+function buildCB(){const n=CB.n;$('cb-n').value=n;const bh=Array.from({length:n},(_,j)=>'b'+sub_(j)),ch=Array.from({length:n},(_,j)=>'c'+sub_(j)),rl=VARS.slice(0,n);
+ $('cbin').innerHTML=`<h2>${T('Basis B · vectors as columns','Base B · vectores en columnas')}</h2><div class="matwrap"><span class="br l"></span>${cbGrid('B',CB.B,bh,rl)}<span class="br r"></span></div>
+ <h2 style="margin-top:14px">${T('Vector v (standard coordinates)','Vector v (coordenadas canónicas)')}</h2><div class="matwrap">${cbGrid('v',CB.v.map(x=>[x]),['v'],rl)}</div>
+ <h2 style="margin-top:14px">${T('Basis C · vectors as columns','Base C · vectores en columnas')}</h2><div class="matwrap"><span class="br l"></span>${cbGrid('C',CB.C,ch,rl)}<span class="br r"></span></div>
+ <h2 style="margin-top:14px">${T('Linear map A (standard basis)','Aplicación lineal A (base canónica)')}</h2><div class="matwrap"><span class="br l"></span>${cbGrid('A',CB.A,Array.from({length:n},()=>''),rl)}<span class="br r"></span></div>`;
+ $('cbin').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{const k=inp.dataset.k;if(k==='v')CB.v[+inp.dataset.i]=inp.value;else CB[k][+inp.dataset.i][+inp.dataset.j]=inp.value;computeCB()}));
+ $('cbpresets').innerHTML='';CBP.forEach(([en,es,n2,B,v,A])=>{const b=document.createElement('button');b.textContent=T(en,es);b.onclick=()=>loadCB(n2,B,v,A,true);$('cbpresets').appendChild(b)});
+ $('cbhint').textContent=n===2?T('Drag the tip of v','Arrastra la punta de v'):''}
+function resizeCB(){const n=+$('cb-n').value,fit=(M,id)=>Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>(M[i]&&M[i][j]!==undefined&&M.length===n)?M[i][j]:(i===j?'1':'0')));CB={n,B:fit(CB.B),C:fit(CB.C),A:fit(CB.A),v:Array.from({length:n},(_,i)=>CB.v[i]||'1')};buildCB();computeCB()}
+function loadCB(n,B,v,A,stay){CB={n,B:B.map(r=>r.map(String)),v:v.map(String),C:idS(n),A:(A||idS(n)).map(r=>r.map(String))};buildCB();computeCB();if(!stay)showTab('basis')}
+const mvF=(M,v)=>M.map(r=>r.reduce((s,x,k)=>fadd(s,fmul(x,v[k])),F(0)));
+let CBR=null;
+function computeCB(){const n=CB.n,pm=M=>M.map(r=>r.map(parseF)),PB=pm(CB.B),PC=pm(CB.C),Am=pm(CB.A),v=CB.v.map(parseF);
+ $('cbin').querySelectorAll('input').forEach(i=>i.classList.toggle('bad',!parseF(i.value)));
+ if([...PB.flat(),...PC.flat(),...Am.flat(),...v].some(x=>!x)){$('cberr').textContent=T('Use integers, decimals or fractions in every cell.','Usa enteros, decimales o fracciones en cada casilla.');return}
+ const PBi=invF(PB),PCi=invF(PC);if(!PBi||!PCi){$('cberr').textContent=(!PBi?T('B is not a basis: its vectors are dependent (det = 0).','B no es una base: sus vectores son dependientes (det = 0).'):T('C is not a basis: its vectors are dependent (det = 0).','C no es una base: sus vectores son dependientes (det = 0).'));CBR=null;drawCB();return}
+ $('cberr').textContent='';save('basis',CB);
+ const vB=mvF(PBi,v),vC=mvF(PCi,v),PCB=mulF(PCi,PB),AB=mulF(mulF(PBi,Am),PB),col_=c=>c.map(x=>[x]);
+ const isStd=PC.every((r,i)=>r.every((x,j)=>feq(x,F(i===j?1:0))));const bn=j=>'b'+sub_(j);
+ let out=`<div><h4>${T('Coordinates in B','Coordenadas en B')}</h4><div class="how"><code>[v]_B = P_B⁻¹·v</code><br>P_B = ${matHTML(PB,fs)} P_B⁻¹ = ${matHTML(PBi,fs)}<br><code>[v]_B = ${vF(vB)}</code><br>${T('Check:','Comprobación:')} <code>${linStr(F(0),vB,vB.map((_,j)=>bn(j)))} = ${vF(v)}</code></div></div>`;
+ out+=`<div><h4>${T('Coordinates in C','Coordenadas en C')}</h4><div class="how">${isStd?T('C is the standard basis, so the coordinates do not change:','C es la base canónica, así que las coordenadas no cambian:'):'<code>[v]_C = P_C⁻¹·v</code><br>'}<code>[v]_C = ${vF(vC)}</code></div></div>`;
+ out+=`<div><h4>${T('Change-of-basis matrix from B to C','Matriz de cambio de base de B a C')}</h4><div class="how"><code>P_{C←B} = P_C⁻¹·P_B</code> = ${matHTML(PCB,fs)}<br>${T('Its columns are the vectors of B written in coordinates of C.','Sus columnas son los vectores de B escritos en coordenadas de C.')}<br>${T('Check:','Comprobación:')} <code>P_{C←B}·[v]_B = ${vF(mvF(PCB,vB))} = [v]_C</code></div></div>`;
+ const diag=AB.every((r,i)=>r.every((x,j)=>i===j||fz(x)));
+ out+=`<div><h4>${T('The map A in basis B','La aplicación A en la base B')}</h4><div class="how"><code>[A]_B = P_B⁻¹·A·P_B</code> = ${matHTML(AB,fs)}<br>${diag?T('It is diagonal: B is a basis of eigenvectors of A.','Es diagonal: B es una base de vectores propios de A.'):T('Same map, different coordinates. Trace, determinant and eigenvalues do not change.','La misma aplicación en otras coordenadas. La traza, el determinante y los valores propios no cambian.')}</div></div>`;
+ $('cbout').innerHTML=out;CBR={PB,vB,v};if(tab==='basis')drawCB()}
+function drawCB(){const vis=CB.n===2;$('cbsvg').style.display=vis?'block':'none';$('cbnovis').hidden=vis;if(!vis)return;DR={dim:2,s:40,mk:'cb',yaw:0,pitch:0};drawGrid($('cbgrid0'));$('cbgrid0').style.opacity=.55;const G=$('cbgrid'),V=$('cbvecs');G.innerHTML='';V.innerHTML='';
+ const v=CB.v.map(s=>{const x=parseF(s);return x?fnum(x):0});
+ if(CBR){const b1=CBR.PB.map(r=>fnum(r[0])),b2=CBR.PB.map(r=>fnum(r[1])),pt=(i,j)=>[i*b1[0]+j*b2[0],i*b1[1]+j*b2[1]];
+  for(let i=-14;i<=14;i++){const l1=line(pt(i,-14),pt(i,14),'var(--accent)',i?1:1.8,'',G),l2=line(pt(-14,i),pt(14,i),'var(--accent)',i?1:1.8,'',G);l1.style.opacity=l2.style.opacity=i?.3:.6}
+  arrow([0,0],b1,0,'',V);mlabel(b1,'b₁',0,V);arrow([0,0],b2,1,'',V);mlabel(b2,'b₂',1,V);
+  const c=CBR.vB.map(fnum),p1=sc(b1,c[0]);arrow([0,0],p1,0,'6 4',mk('g',{opacity:.9},V),2);arrow(p1,v,1,'6 4',mk('g',{opacity:.9},V),2)}
+ if(Math.hypot(...v)>1e-9)arrow([0,0],v,2,'',V,3);mlabel(v,'v',2,V);
+ const hp=P(v),h=mk('circle',{cx:hp[0],cy:hp[1],r:12},V);h.style.cssText=`fill:${col(2)};fill-opacity:.2;stroke:${col(2)};cursor:grab`;h.addEventListener('pointerdown',e=>{e.stopPropagation();cbdrag=true;$('cbsvg').setPointerCapture(e.pointerId)})}
+const cbsvg=$('cbsvg');
+cbsvg.addEventListener('pointermove',e=>{if(!cbdrag)return;const r=cbsvg.getBoundingClientRect(),k=680/r.width;let p=[((e.clientX-r.left)*k-340)/40,(220-(e.clientY-r.top)*k)/40].map(v=>Math.round(v*2)/2);p[0]=Math.max(-8,Math.min(8,p[0]));p[1]=Math.max(-5,Math.min(5,p[1]));CB.v=p.map(String);p.forEach((x,i)=>{const el=$(`cb-v-${i}-0`);if(el)el.value=x});computeCB()});
+cbsvg.addEventListener('pointerup',()=>cbdrag=false);
+
+/* ================= DATA AND AI ================= */
+const DPRE=[['Linear trend','Tendencia lineal',[[-4,-2.5],[-3,-1],[-2,-1.5],[-1,0],[0,0.5],[1,1.5],[2,1],[3,2.5],[4,3]]],['Strong correlation','Correlación fuerte',[[-5,-3.8],[-3.5,-2.6],[-2,-1.7],[-1,-0.6],[0.5,0.3],[1.5,1.4],[3,2.2],[4.5,3.6]]],['No correlation','Sin correlación',[[-4,1],[-3,-2],[-1,3],[0,-1],[1,2],[2,-3],[3,1.5],[4,-0.5],[-2,0]]],['Outlier','Valor atípico',[[-4,-2],[-3,-1.5],[-2,-1],[-1,-0.5],[0,0],[1,0.5],[2,1],[3,-4.5],[4,2]]],['Steep cloud','Nube vertical',[[-0.5,-4],[0,-2],[0.3,0],[-0.2,1],[0.5,3],[0,4],[0.2,-3]]]];
+let DP=load('data')||DPRE[0][2].map(p=>p.slice()),DTOG=load('dtog')||{ls:true,res:true,pca:true,perp:false},ddrag=-1;
+function buildData(){$('dpresets').innerHTML='';DPRE.forEach(([en,es,pts])=>{const b=document.createElement('button');b.textContent=T(en,es);b.onclick=()=>{DP=pts.map(p=>p.slice());drawData()};$('dpresets').appendChild(b)});
+ $('dtoggles').innerHTML=[['ls','Least squares line','Recta de mínimos cuadrados'],['res','Vertical residuals','Residuos verticales'],['pca','Principal axes','Ejes principales'],['perp','Distances to PC1','Distancias a PC1']].map(([k,en,es])=>`<button aria-pressed="${!!DTOG[k]}" onclick="DTOG.${k}=!DTOG.${k};save('dtog',DTOG);buildData();drawData()">${T(en,es)}</button>`).join('')}
+function dataStats(){const N=DP.length;if(N<2)return null;let sx=0,sy=0,sxx=0,sxy=0,syy=0;DP.forEach(([x,y])=>{sx+=x;sy+=y;sxx+=x*x;sxy+=x*y;syy+=y*y});const den=N*sxx-sx*sx;const ls=Math.abs(den)>1e-9?{m:(N*sxy-sx*sy)/den,c:(sy*sxx-sx*sxy)/den}:null;
+ const mx=sx/N,my=sy/N;let cxx=0,cxy=0,cyy=0;DP.forEach(([x,y])=>{cxx+=(x-mx)**2;cxy+=(x-mx)*(y-my);cyy+=(y-my)**2});cxx/=N-1;cxy/=N-1;cyy/=N-1;
+ const tr=cxx+cyy,dt=cxx*cyy-cxy*cxy,dsc=Math.sqrt(Math.max(0,tr*tr/4-dt)),l1=tr/2+dsc,l2=tr/2-dsc;let v1=Math.abs(cxy)>1e-12?[l1-cyy,cxy]:(cxx>=cyy?[1,0]:[0,1]);const nv=Math.hypot(...v1);v1=[v1[0]/nv,v1[1]/nv];if(v1[0]<0)v1=[-v1[0],-v1[1]];
+ return{N,sx,sy,sxx,sxy,syy,ls,mx,my,cxx,cxy,cyy,l1,l2:Math.max(0,l2),v1,v2:[-v1[1],v1[0]]}}
+function drawData(){save('data',DP);DR={dim:2,s:40,mk:'ah',yaw:0,pitch:0};drawGrid($('dgrid'));$('dgrid').style.opacity=.7;const Fg=$('dfit'),Pg=$('dpts');Fg.innerHTML='';Pg.innerHTML='';const s=dataStats();
+ if(s&&s.ls&&DTOG.ls){line([-10,s.ls.m*-10+s.ls.c],[10,s.ls.m*10+s.ls.c],'var(--v3)',2.2,'',Fg);if(DTOG.res)DP.forEach(([x,y])=>line([x,y],[x,s.ls.m*x+s.ls.c],'var(--v3)',1.2,'3 3',Fg))}
+ if(s&&DTOG.pca){const a=2*Math.sqrt(s.l1),b=2*Math.sqrt(s.l2);line([s.mx-s.v1[0]*14,s.my-s.v1[1]*14],[s.mx+s.v1[0]*14,s.my+s.v1[1]*14],'var(--v1)',1,'7 5',Fg).style.opacity=.6;line([s.mx-s.v1[0]*a,s.my-s.v1[1]*a],[s.mx+s.v1[0]*a,s.my+s.v1[1]*a],'var(--v1)',4,'',Fg);line([s.mx-s.v2[0]*b,s.my-s.v2[1]*b],[s.mx+s.v2[0]*b,s.my+s.v2[1]*b],'var(--v2)',4,'',Fg);
+  const q=P([s.mx+s.v1[0]*a,s.my+s.v1[1]*a]),t=mk('text',{x:q[0]+6,y:q[1]-6},Fg);t.textContent='PC1';t.style.cssText='font:500 13px var(--mono);fill:var(--v1)';const q2=P([s.mx+s.v2[0]*b,s.my+s.v2[1]*b]),t2=mk('text',{x:q2[0]+6,y:q2[1]-6},Fg);t2.textContent='PC2';t2.style.cssText='font:500 13px var(--mono);fill:var(--v2)'}
+ if(s&&DTOG.perp)DP.forEach(([x,y])=>{const d=(x-s.mx)*s.v1[0]+(y-s.my)*s.v1[1];line([x,y],[s.mx+d*s.v1[0],s.my+d*s.v1[1]],'var(--v1)',1.2,'3 3',Fg)});
+ DP.forEach(([x,y],i)=>{const q=P([x,y]),c=mk('circle',{cx:q[0],cy:q[1],r:7,'data-i':i},Pg);c.style.cssText='fill:var(--ink);fill-opacity:.85;stroke:var(--bg);stroke-width:2;cursor:grab'});
+ const L=$('dls'),Pc=$('dpca');if(!s){L.innerHTML=Pc.innerHTML=T('Add at least two points.','Añade al menos dos puntos.');return}
+ if(!s.ls)L.innerHTML=T('All points have the same x, so no line y = mx + c fits. PCA still works.','Todos los puntos tienen la misma x, así que no hay recta y = mx + c. PCA sigue funcionando.');
+ else{let sse=0,sst=0,rx=0,r1=0;DP.forEach(([x,y])=>{const r=y-(s.ls.m*x+s.ls.c);sse+=r*r;sst+=(y-s.my)**2;rx+=r*x;r1+=r});const r2=sst>1e-12?1-sse/sst:1;
+  L.innerHTML=`<code>y = ${f(s.ls.m)}x ${s.ls.c<0?'− '+f(-s.ls.c):'+ '+f(s.ls.c)}</code><br><br>${T('Columns of A: x = (x₁, …, xₙ) and 1 = (1, …, 1); b = (y₁, …, yₙ). Normal equations AᵀA·(m, c) = Aᵀb:','Columnas de A: x = (x₁, …, xₙ) y 1 = (1, …, 1); b = (y₁, …, yₙ). Ecuaciones normales AᵀA·(m, c) = Aᵀb:')}<br>AᵀA = ${matHTML([[s.sxx,s.sx],[s.sx,s.N]])} Aᵀb = ${matHTML([[s.sxy],[s.sy]])}<br>${T('The residual r = b − A·(m, c) is orthogonal to both columns:','El residuo r = b − A·(m, c) es ortogonal a ambas columnas:')} <code>x·r = ${f(rx)}, 1·r = ${f(r1)}</code><br>${T('Sum of squared residuals','Suma de residuos al cuadrado')} <code>${f(sse)}</code>, <code>R² = ${f(r2)}</code>`}
+ Pc.innerHTML=`${T('Mean','Media')} <code>(${f(s.mx)}, ${f(s.my)})</code><br>${T('Covariance matrix','Matriz de covarianza')} S = ${matHTML([[s.cxx,s.cxy],[s.cxy,s.cyy]])}<br><code>λ₁ = ${f(s.l1)}</code>, <code>λ₂ = ${f(s.l2)}</code> · PC1 = <code>${vs(s.v1)}</code><br>${T('PC1 explains','PC1 explica el')} <code>${f(100*s.l1/(s.l1+s.l2||1))}%</code> ${T('of the variance.','de la varianza.')}<br><br>${T('PC1 minimizes the perpendicular distances to the line, while least squares minimizes the vertical ones. Try the steep cloud to see them disagree.','PC1 minimiza las distancias perpendiculares a la recta, mientras que mínimos cuadrados minimiza las verticales. Prueba la nube vertical para ver cómo discrepan.')}`}
+const dsvg=$('dsvg');
+function dPt(e){const r=dsvg.getBoundingClientRect(),k=680/r.width;return[Math.round(((e.clientX-r.left)*k-340)/40*10)/10,Math.round((220-(e.clientY-r.top)*k)/40*10)/10]}
+dsvg.addEventListener('pointerdown',e=>{const i=e.target.dataset&&e.target.dataset.i;if(i!==undefined){ddrag=+i}else{if(DP.length>=40)return;DP.push(dPt(e));ddrag=DP.length-1;drawData()}dsvg.setPointerCapture(e.pointerId)});
+dsvg.addEventListener('pointermove',e=>{if(ddrag<0)return;const p=dPt(e);p[0]=Math.max(-8,Math.min(8,p[0]));p[1]=Math.max(-5,Math.min(5,p[1]));DP[ddrag]=p;drawData()});
+dsvg.addEventListener('pointerup',()=>ddrag=-1);
+
+/* ================= THEORY ================= */
+const NOTES=[
+ {en:'Linear combination',es:'Combinación lineal',
+  def:['A vector w is a linear combination of v₁, …, vₖ when w = c₁v₁ + … + cₖvₖ for some scalars cᵢ.','Un vector w es combinación lineal de v₁, …, vₖ si w = c₁v₁ + … + cₖvₖ para ciertos escalares cᵢ.'],
+  ex:'(2, 4) = 1·(3, 1) + 1·(−1, 3)',
+  trick:['Finding the cᵢ is solving the system A·c = w, where the columns of A are the vectors.','Hallar los cᵢ es resolver el sistema A·c = w, donde las columnas de A son los vectores.'],
+  trap:['Coefficients can be zero or negative. Being a combination does not require using every vector.','Los coeficientes pueden ser cero o negativos. Ser combinación no exige usar todos los vectores.'],
+  go:{lab:[2,[[3,1],[-1,3],[2,4]],2]}},
+ {en:'Span',es:'Subespacio generado',
+  def:['The span of a set is the set of all its linear combinations. It is always a subspace and always contains 0.','El subespacio generado (envoltura lineal) es el conjunto de todas sus combinaciones lineales. Siempre es un subespacio y siempre contiene el 0.'],
+  ex:'span{(1, 0, 0), (0, 1, 0)} = '+'{(x, y, 0)}',
+  trick:['dim span{v₁, …, vₖ} = rank of the matrix with those columns.','dim ⟨v₁, …, vₖ⟩ = rango de la matriz con esas columnas.'],
+  trap:['Adding a vector that is already in the span does not make the span bigger.','Añadir un vector que ya está en el subespacio no lo hace más grande.'],
+  go:{lab:[3,[[2,0,1],[0,2,1],[2,2,2]],2]}},
+ {en:'Linear independence',es:'Independencia lineal',
+  def:['v₁, …, vₖ are independent when c₁v₁ + … + cₖvₖ = 0 forces every cᵢ = 0. Otherwise some vector is a combination of the others.','v₁, …, vₖ son independientes si c₁v₁ + … + cₖvₖ = 0 obliga a que todos los cᵢ = 0. Si no, algún vector es combinación de los demás.'],
+  ex:['2·(1, 2) − (2, 4) = (0, 0)  ⇒  dependent','2·(1, 2) − (2, 4) = (0, 0)  ⇒  dependientes'],
+  trick:['Put the vectors as columns and reduce: independent ⇔ a pivot in every column ⇔ rank = k.','Pon los vectores en columnas y reduce: independientes ⇔ pivote en cada columna ⇔ rango = k.'],
+  trap:['Any set containing 0 is dependent. In ℝⁿ, more than n vectors are always dependent.','Todo conjunto que contenga el 0 es dependiente. En ℝⁿ, más de n vectores siempre son dependientes.'],
+  go:{lab:[2,[[2,1],[-2,-1],[4,2]],2]}},
+ {en:'Rank',es:'Rango',
+  def:['The rank of A is the number of pivots after Gaussian elimination: the maximum number of independent columns, which equals the maximum number of independent rows.','El rango de A es el número de pivotes tras la eliminación gaussiana: el máximo número de columnas independientes, que coincide con el de filas independientes.'],
+  ex:'rank [[1, 2], [2, 4]] = 1',
+  trick:['Row rank = column rank, so you can reduce Aᵀ if its rows are easier to work with.','Rango por filas = rango por columnas, así que puedes reducir Aᵀ si sus filas son más cómodas.'],
+  trap:['Count pivots after reducing, not the nonzero rows of the original matrix.','Cuenta pivotes después de reducir, no las filas no nulas de la matriz original.'],
+  go:{elim:EDEF.M}},
+ {en:'Basis and dimension',es:'Base y dimensión',
+  def:['A basis is an independent set that spans the space. Every basis has the same number of vectors: the dimension.','Una base es un conjunto independiente que genera el espacio. Todas las bases tienen el mismo número de vectores: la dimensión.'],
+  ex:'{(1,0,0), (0,1,0), (0,0,1)}  ⇒  dim ℝ³ = 3',
+  trick:['In ℝⁿ, n independent vectors are automatically a basis. You do not need to check that they span.','En ℝⁿ, n vectores independientes son automáticamente una base. No hace falta comprobar que generan.'],
+  trap:['A basis is not unique; the dimension is.','La base no es única; la dimensión sí.'],
+  go:{lab:[3,[[1,0,0],[0,1,0],[0,0,1]],2]}},
+ {en:'Dot product and orthogonality',es:'Producto escalar y ortogonalidad',
+  def:['u · v = u₁v₁ + … + uₙvₙ = |u||v| cos θ. The vectors are orthogonal when u · v = 0.','u · v = u₁v₁ + … + uₙvₙ = |u||v| cos θ. Los vectores son ortogonales cuando u · v = 0.'],
+  ex:'(1, 2, 2) · (2, 1, −2) = 2 + 2 − 4 = 0',
+  trick:['To find k that makes two vectors orthogonal, the dot product is linear in k: set it to 0 and solve.','Para hallar k que haga ortogonales dos vectores, el producto escalar es lineal en k: iguálalo a 0 y despeja.'],
+  trap:['0 is orthogonal to every vector, yet it can never belong to a basis.','El 0 es ortogonal a todo vector, pero nunca puede formar parte de una base.'],
+  go:{lab:[2,[[3,0],[0,2]],1]}},
+ {en:'Orthogonal implies independent',es:'Ortogonal implica independiente',
+  def:['Nonzero, pairwise orthogonal vectors are independent. Dot c₁v₁ + … + cₖvₖ = 0 with vⱼ: you get cⱼ|vⱼ|² = 0, so cⱼ = 0.','Vectores no nulos y ortogonales dos a dos son independientes. Multiplica c₁v₁ + … + cₖvₖ = 0 escalarmente por vⱼ: queda cⱼ|vⱼ|² = 0, luego cⱼ = 0.'],
+  ex:'(1,1,0), (1,−1,0), (0,0,1)',
+  trick:['In an orthogonal basis, coordinates need no system: cⱼ = (w · vⱼ) / (vⱼ · vⱼ).','En una base ortogonal las coordenadas no necesitan sistema: cⱼ = (w · vⱼ) / (vⱼ · vⱼ).'],
+  trap:['The converse is false: (1, 0) and (1, 1) are independent but not orthogonal.','El recíproco es falso: (1, 0) y (1, 1) son independientes pero no ortogonales.'],
+  go:{lab:[2,[[3,1],[1,2.5]],1]}},
+ {en:'Orthogonal projection',es:'Proyección ortogonal',
+  def:['The projection of w onto u is the part of w that points along u: proj_u(w) = ((w·u) / (u·u))·u. What is left over, w − proj_u(w), is orthogonal to u.','La proyección de w sobre u es la parte de w en la dirección de u: proj_u(w) = ((w·u) / (u·u))·u. Lo que sobra, w − proj_u(w), es ortogonal a u.'],
+  ex:'w=(2, 3), u=(1, 1): (5/2)·(1, 1) = (5/2, 5/2)',
+  trick:['The coefficient (w·u)/(u·u) is exactly the coordinate of w along u in any orthogonal basis that contains u.','El coeficiente (w·u)/(u·u) es justo la coordenada de w en la dirección de u en cualquier base ortogonal que contenga a u.'],
+  trap:['Divide by u·u = ‖u‖², not by ‖u‖. Only for a unit vector u does the formula reduce to (w·u)·u.','Divide entre u·u = ‖u‖², no entre ‖u‖. Solo con u unitario la fórmula queda (w·u)·u.'],
+  go:{gs:[2,[[1,1],[2,3]],2]}},
+ {en:'Gram–Schmidt process',es:'Proceso de Gram–Schmidt',
+  def:['Turns v₁, …, vₖ into orthogonal u₁, …, uₖ with the same span: u₁ = v₁, and each uₖ is vₖ minus its projections onto u₁, …, uₖ₋₁.','Transforma v₁, …, vₖ en u₁, …, uₖ ortogonales con el mismo subespacio generado: u₁ = v₁, y cada uₖ es vₖ menos sus proyecciones sobre u₁, …, uₖ₋₁.'],
+  ex:'v₁=(3, 1), v₂=(2, 2): u₂ = v₂ − (8/10)·u₁ = (−2/5, 6/5)',
+  trick:['By hand, multiply any uₖ by a number to clear fractions before the next step. It stays orthogonal and spans the same line.','A mano, multiplica cualquier uₖ por un número para quitar fracciones antes del siguiente paso. Sigue siendo ortogonal y genera la misma recta.'],
+  trap:['Project onto the u’s already built, never onto the original v’s. If some uₖ = 0, vₖ was dependent on the previous vectors.','Proyecta sobre los u ya construidos, nunca sobre los v originales. Si algún uₖ = 0, vₖ dependía de los anteriores.'],
+  go:{gs:[2,[[3,1],[2,2]],0]}},
+ {en:'Orthonormal basis',es:'Base ortonormal',
+  def:['An orthogonal basis whose vectors all have length 1: eᵢ·eⱼ = 0 for i ≠ j and eᵢ·eᵢ = 1. Normalize with eₖ = uₖ / ‖uₖ‖.','Una base ortogonal cuyos vectores tienen todos longitud 1: eᵢ·eⱼ = 0 si i ≠ j y eᵢ·eᵢ = 1. Se normaliza con eₖ = uₖ / ‖uₖ‖.'],
+  ex:'(1/√2)·(1, 1), (1/√2)·(1, −1)',
+  trick:['Coordinates are plain dot products: w = (w·e₁)e₁ + … + (w·eₙ)eₙ. With these vectors as columns of Q, QᵀQ = I, so a square Q has Q⁻¹ = Qᵀ.','Las coordenadas son productos escalares: w = (w·e₁)e₁ + … + (w·eₙ)eₙ. Con estos vectores como columnas de Q, QᵀQ = I, así que si Q es cuadrada, Q⁻¹ = Qᵀ.'],
+  trap:['Normalize at the end. Normalizing early puts square roots into every later step.','Normaliza al final. Si normalizas antes, arrastras raíces cuadradas en todos los pasos siguientes.'],
+  go:{gs:[3,[[1,1,0],[1,0,1],[0,1,1]],4]}},
+ {en:'Determinant test',es:'Criterio del determinante',
+  def:['n vectors in ℝⁿ are independent if and only if det[v₁ … vₙ] ≠ 0. In ℝ³, |det| is the volume of the box they span.','n vectores de ℝⁿ son independientes si y solo si det[v₁ … vₙ] ≠ 0. En ℝ³, |det| es el volumen del paralelepípedo que forman.'],
+  ex:'det [[1, 3], [2, 4]] = 1·4 − 3·2 = −2 ≠ 0',
+  trick:['For 3×3 use Sarrus or u · (v × w). For bigger ones, expand along the row or column with the most zeros.','Para 3×3 usa Sarrus o u · (v × w). Para más grandes, desarrolla por la fila o columna con más ceros.'],
+  trap:['Only for square matrices. With k ≠ n vectors, use the rank instead.','Solo para matrices cuadradas. Con k ≠ n vectores, usa el rango.'],
+  go:{lab:[3,[[2,0,0],[0,2,1],[1,-1,2]],2]}},
+ {en:"Cramer's rule",es:'Regla de Cramer',
+  def:['If det A ≠ 0, the solution of A·x = b is xᵢ = det Aᵢ / det A, where Aᵢ is A with column i replaced by b.','Si det A ≠ 0, la solución de A·x = b es xᵢ = det Aᵢ / det A, donde Aᵢ es A con la columna i sustituida por b.'],
+  ex:'u=(3,1), v=(−1,3), w=(2,4): a = det[w v]/det[u v] = 10/10 = 1',
+  trick:['Fast for 2×2 and 3×3. Beyond that, elimination is less work.','Rápida en 2×2 y 3×3. A partir de ahí, la eliminación requiere menos cálculo.'],
+  trap:['If det A = 0 the rule does not apply: the system has no solution or infinitely many.','Si det A = 0 la regla no se aplica: el sistema no tiene solución o tiene infinitas.'],
+  go:{lab:[2,[[3,1],[-1,3],[2,4]],2]}},
+ {en:'Gaussian elimination',es:'Eliminación gaussiana',
+  def:['Row operations (swap rows, multiply a row by a nonzero number, add a multiple of another row) keep the rank and the dependencies between columns.','Las operaciones por filas (intercambiar, multiplicar una fila por un número no nulo, sumar un múltiplo de otra) conservan el rango y las dependencias entre columnas.'],
+  ex:'R₂ ← R₂ − 2R₁',
+  trick:['In the reduced form, each non-pivot column holds the coefficients that write that vector using the pivot vectors.','En la forma reducida, cada columna sin pivote contiene los coeficientes que la escriben con los vectores pivote.'],
+  trap:['Row operations change the vectors themselves. Read the relations from the reduced form, but take the vectors from the original matrix.','Las operaciones por filas cambian los propios vectores. Lee las relaciones en la forma reducida, pero toma los vectores de la matriz original.'],
+  go:{elim:EDEF.M}},
+ {en:'Linear map and its matrix',es:'Aplicación lineal y su matriz',
+  def:['f is linear when f(u + v) = f(u) + f(v) and f(cu) = c·f(u). Every linear map ℝⁿ → ℝᵐ is x ↦ Ax, and the columns of A are the images of e₁, …, eₙ.','f es lineal si f(u + v) = f(u) + f(v) y f(cu) = c·f(u). Toda aplicación lineal ℝⁿ → ℝᵐ es x ↦ Ax, y las columnas de A son las imágenes de e₁, …, eₙ.'],
+  ex:'90°: e₁ ↦ (0, 1), e₂ ↦ (−1, 0)  ⇒  A = [[0, −1], [1, 0]]',
+  trick:['To build A, work out where each basis vector goes and write it as a column. Then A·v is the same combination of those columns.','Para construir A, calcula a dónde va cada vector de la base y escríbelo como columna. Después A·v es la misma combinación de esas columnas.'],
+  trap:['A linear map always sends 0 to 0. x ↦ x + b with b ≠ 0 is not linear (it is affine).','Una aplicación lineal siempre envía el 0 al 0. x ↦ x + b con b ≠ 0 no es lineal (es afín).'],
+  go:{maps:[[0,-1],[1,0]]}},
+ {en:'Kernel and image',es:'Núcleo e imagen',
+  def:['ker A = {x : Ax = 0} and im A = {Ax} = span of the columns. Rank–nullity: dim ker A + rank A = number of columns.','ker A = {x : Ax = 0} e im A = {Ax} = subespacio generado por las columnas. Teorema rango–nulidad: dim ker A + rango A = número de columnas.'],
+  ex:'A = [[1, 2], [2, 4]]: ker = span{(−2, 1)}, im = span{(1, 2)}, 1 + 1 = 2',
+  trick:['Kernel basis: solve Ax = 0 from the reduced form (one vector per free variable). Image basis: the pivot columns of the original A.','Base del núcleo: resuelve Ax = 0 en la forma reducida (un vector por variable libre). Base de la imagen: las columnas pivote de la A original.'],
+  trap:['Injective ⇔ ker A = {0}. Surjective ⇔ im A is the whole target. For a square matrix both mean det A ≠ 0.','Inyectiva ⇔ ker A = {0}. Sobreyectiva ⇔ im A es todo el espacio de llegada. En una matriz cuadrada ambas equivalen a det A ≠ 0.'],
+  go:{maps:[[1,2],[2,4]]}},
+ {en:'Determinant as a scale factor',es:'El determinante como factor de escala',
+  def:['|det A| is the factor by which A multiplies areas (volumes in ℝ³). A negative determinant means orientation is reversed.','|det A| es el factor por el que A multiplica las áreas (volúmenes en ℝ³). Un determinante negativo significa que se invierte la orientación.'],
+  ex:'A = [[2, 0], [0, 1/2]]: det = 1, shapes change but areas do not',
+  trick:['det(AB) = det A · det B, det(A⁻¹) = 1 / det A, det(Aᵀ) = det A.','det(AB) = det A · det B, det(A⁻¹) = 1 / det A, det(Aᵀ) = det A.'],
+  trap:['det(A + B) ≠ det A + det B, and det(cA) = cⁿ·det A, not c·det A.','det(A + B) ≠ det A + det B, y det(cA) = cⁿ·det A, no c·det A.'],
+  go:{maps:[[2,0],[0,0.5]]}},
+ {en:'Eigenvalues and eigenvectors',es:'Valores y vectores propios',
+  def:['v ≠ 0 is an eigenvector with eigenvalue λ when Av = λv: A only stretches v along its own line.','v ≠ 0 es un vector propio con valor propio λ si Av = λv: A solo estira v a lo largo de su propia recta.'],
+  ex:'[[2, 1], [1, 2]]·(1, 1) = (3, 3) = 3·(1, 1)',
+  trick:['The eigenvectors for λ are the nonzero vectors of ker(A − λI). λ = 0 is an eigenvalue exactly when A is not invertible.','Los vectores propios de λ son los vectores no nulos de ker(A − λI). λ = 0 es valor propio exactamente cuando A no es invertible.'],
+  trap:['The zero vector is never an eigenvector, but λ = 0 can perfectly well be an eigenvalue.','El vector nulo nunca es vector propio, pero λ = 0 sí puede ser valor propio.'],
+  go:{maps:[[2,1],[1,2]]}},
+ {en:'Characteristic polynomial',es:'Polinomio característico',
+  def:['The eigenvalues are the roots of p(λ) = |A − λI|, a polynomial of degree n.','Los valores propios son las raíces de p(λ) = |A − λI|, un polinomio de grado n.'],
+  ex:'[[4, 1], [2, 3]]: λ² − 7λ + 10 = (λ − 5)(λ − 2)',
+  trick:['Sum of eigenvalues = tr A and product = det A. In a triangular matrix the eigenvalues are the diagonal entries.','Suma de valores propios = tr A y producto = det A. En una matriz triangular los valores propios son los de la diagonal.'],
+  trap:['Subtract λ only on the diagonal. Use the trace and determinant checks to catch sign errors.','Resta λ solo en la diagonal. Usa las comprobaciones de traza y determinante para detectar errores de signo.'],
+  go:{eig:[[4,1],[2,3]]}},
+ {en:'Diagonalization',es:'Diagonalización',
+  def:['A is diagonalizable when A = PDP⁻¹ with D diagonal. The columns of P are n independent eigenvectors and D holds their eigenvalues in the same order.','A es diagonalizable si A = PDP⁻¹ con D diagonal. Las columnas de P son n vectores propios independientes y D contiene sus valores propios en el mismo orden.'],
+  ex:'[[4, 1], [2, 3]] = P·diag(5, 2)·P⁻¹, P = [[1, 1], [1, −2]]',
+  trick:['Distinct eigenvalues ⇒ diagonalizable. Symmetric ⇒ diagonalizable with orthogonal P. And Aᵏ = PDᵏP⁻¹ makes powers easy.','Valores propios distintos ⇒ diagonalizable. Simétrica ⇒ diagonalizable con P ortogonal. Y Aᵏ = PDᵏP⁻¹ facilita las potencias.'],
+  trap:['Every eigenvalue needs as many independent eigenvectors as its multiplicity. [[1, 1], [0, 1]] has λ = 1 twice but only one eigenvector.','Cada valor propio necesita tantos vectores propios independientes como su multiplicidad. [[1, 1], [0, 1]] tiene λ = 1 doble pero un solo vector propio.'],
+  go:{eig:[[1,1],[0,1]]}},
+ {en:'Rouché–Frobenius theorem',es:'Teorema de Rouché–Frobenius',
+  def:['Ax = b has a solution exactly when rank A = rank A*, where A* = (A | b). It is unique when that rank equals the number of unknowns n; otherwise there are infinitely many, with n − rank free parameters.','Ax = b tiene solución exactamente cuando rango A = rango A*, con A* = (A | b). Es única si ese rango es igual al número de incógnitas n; si no, hay infinitas, con n − rango parámetros libres.'],
+  ex:['rank A = rank A* = 2 < 3 unknowns ⇒ SCI with 1 parameter','rango A = rango A* = 2 < 3 incógnitas ⇒ SCI con 1 parámetro'],
+  trick:['For a square system, |A| ≠ 0 already means SCD. Only the values that make |A| = 0 need a closer look.','En un sistema cuadrado, |A| ≠ 0 ya significa SCD. Solo hay que estudiar con detalle los valores que anulan |A|.'],
+  trap:['Compare rank A* with rank A, not with the number of equations. Extra equations can be redundant.','Compara el rango de A* con el de A, no con el número de ecuaciones. Puede haber ecuaciones redundantes.'],
+  go:{sys:2}},
+ {en:'Discussing a system with a parameter',es:'Discusión de un sistema con parámetro',
+  def:['Find the values of the parameter where the ranks can change (for a square system, the roots of |A|). Then study the general case and each of those values separately.','Busca los valores del parámetro donde pueden cambiar los rangos (en un sistema cuadrado, las raíces de |A|). Después estudia el caso general y cada uno de esos valores por separado.'],
+  ex:'(a 1 1 | 1; 1 a 1 | 1; 1 1 a | 1): |A| = (a − 1)²(a + 2)',
+  trick:['Factor |A| with row or column operations before expanding. Here, adding all the columns to the first gives the common factor (a + 2).','Factoriza |A| con operaciones de filas o columnas antes de desarrollar. Aquí, sumar todas las columnas a la primera da el factor común (a + 2).'],
+  trap:['Substitute each critical value into the original system and reduce again. Do not reuse a reduction where you divided by an expression that is now 0.','Sustituye cada valor crítico en el sistema original y reduce de nuevo. No reutilices una reducción en la que dividiste por una expresión que ahora vale 0.'],
+  go:{sys:0}},
+ {en:'Implicit and parametric equations',es:'Ecuaciones implícitas y paramétricas',
+  def:['A subspace can be described by generators (parametric form, x = λu + μv) or by homogeneous equations (implicit form). It needs n − dim independent implicit equations.','Un subespacio se puede describir con generadores (forma paramétrica, x = λu + μv) o con ecuaciones homogéneas (forma implícita). Necesita n − dim ecuaciones implícitas independientes.'],
+  ex:'span{(1, 0, 1), (0, 1, 1)} ⇔ x + y − z = 0',
+  trick:['Generators to equations: put the generators and a generic (x, y, z) in a matrix and require its rank not to grow (its minors vanish). Equations to generators: solve the homogeneous system.','De generadores a ecuaciones: pon los generadores y un (x, y, z) genérico en una matriz y exige que el rango no aumente (sus menores se anulan). De ecuaciones a generadores: resuelve el sistema homogéneo.'],
+  trap:['Implicit equations of a subspace are always homogeneous (= 0). x + y = 1 describes an affine plane, which does not contain 0.','Las ecuaciones implícitas de un subespacio siempre son homogéneas (= 0). x + y = 1 describe un plano afín, que no contiene el 0.'],
+  go:{sub:0}},
+ {en:'Sum, intersection and Grassmann',es:'Suma, intersección y Grassmann',
+  def:['U + W is spanned by the generators of both. U ∩ W is defined by the implicit equations of both together. Grassmann: dim(U + W) = dim U + dim W − dim(U ∩ W).','U + W está generado por los generadores de ambos. U ∩ W se define con las ecuaciones implícitas de ambos juntas. Grassmann: dim(U + W) = dim U + dim W − dim(U ∩ W).'],
+  ex:['Two different planes in ℝ³: 3 = 2 + 2 − 1, so they meet in a line','Dos planos distintos en ℝ³: 3 = 2 + 2 − 1, así que se cortan en una recta'],
+  trick:['Compute whichever is easier, dim(U + W) (a rank) or dim(U ∩ W), and get the other one from Grassmann.','Calcula lo más fácil, dim(U + W) (un rango) o dim(U ∩ W), y obtén lo otro con Grassmann.'],
+  trap:['U ∪ W is usually not a subspace; the sum is the smallest subspace containing both. U ⊕ W (direct sum) means U ∩ W = {0}.','U ∪ W normalmente no es un subespacio; la suma es el menor subespacio que contiene a ambos. U ⊕ W (suma directa) significa U ∩ W = {0}.'],
+  go:{sub:0}},
+ {en:'Change of basis',es:'Cambio de base',
+  def:['If P_B has the vectors of B as columns, then v = P_B·[v]_B, so [v]_B = P_B⁻¹·v. From B to C: [v]_C = P_C⁻¹·P_B·[v]_B.','Si P_B tiene los vectores de B en columnas, entonces v = P_B·[v]_B, así que [v]_B = P_B⁻¹·v. De B a C: [v]_C = P_C⁻¹·P_B·[v]_B.'],
+  ex:'B = {(1, 1), (−1, 1)}, v = (3, 1): [v]_B = (2, −1)',
+  trick:['The columns of the change matrix from B to C are the vectors of B written in coordinates of C.','Las columnas de la matriz de cambio de B a C son los vectores de B escritos en coordenadas de C.'],
+  trap:['Direction matters: P_B turns B-coordinates into standard ones. Going the other way needs the inverse.','La dirección importa: P_B convierte coordenadas en B en canónicas. Para ir al revés hace falta la inversa.'],
+  go:{basis:0}},
+ {en:'Matrix of a map in another basis',es:'Matriz de una aplicación en otra base',
+  def:['If A is the matrix of a map in the standard basis, in basis B the same map has matrix P⁻¹AP. These are similar matrices: same determinant, trace, rank and eigenvalues.','Si A es la matriz de una aplicación en la base canónica, en la base B la misma aplicación tiene matriz P⁻¹AP. Son matrices semejantes: mismo determinante, traza, rango y valores propios.'],
+  ex:'A = [[2, 1], [1, 2]], B = {(1, 1), (1, −1)}: P⁻¹AP = diag(3, 1)',
+  trick:['Diagonalizing is exactly choosing a basis of eigenvectors, where the matrix becomes diagonal.','Diagonalizar es exactamente elegir una base de vectores propios, en la que la matriz se vuelve diagonal.'],
+  trap:['Similar matrices share eigenvalues but not eigenvectors: P converts the eigenvectors between the two bases.','Las matrices semejantes comparten valores propios pero no vectores propios: P convierte los vectores propios de una base a otra.'],
+  go:{basis:2}},
+ {en:'Least squares',es:'Mínimos cuadrados',
+  def:['When Ax = b has no solution, the best approximation x̂ solves the normal equations AᵀA·x̂ = Aᵀb. Then Ax̂ is the orthogonal projection of b onto the column space of A.','Cuando Ax = b no tiene solución, la mejor aproximación x̂ resuelve las ecuaciones normales AᵀA·x̂ = Aᵀb. Entonces Ax̂ es la proyección ortogonal de b sobre el espacio columna de A.'],
+  ex:['Fitting y = mx + c: the columns of A are (x₁, …, xₙ) and (1, …, 1)','Ajuste y = mx + c: las columnas de A son (x₁, …, xₙ) y (1, …, 1)'],
+  trick:['The residual r = b − Ax̂ is orthogonal to every column of A, so Aᵀr = 0. That one fact gives the normal equations.','El residuo r = b − Ax̂ es ortogonal a todas las columnas de A, así que Aᵀr = 0. De ahí salen directamente las ecuaciones normales.'],
+  trap:['Least squares minimizes vertical distances (errors in y), not perpendicular ones. Swapping x and y gives a different line.','Mínimos cuadrados minimiza las distancias verticales (errores en y), no las perpendiculares. Intercambiar x e y da otra recta.'],
+  go:{data:0}},
+ {en:'Principal component analysis',es:'Análisis de componentes principales',
+  def:['The eigenvectors of the covariance matrix point in the directions of greatest variance, and each eigenvalue is the variance along its direction.','Los vectores propios de la matriz de covarianza apuntan en las direcciones de mayor varianza, y cada valor propio es la varianza en su dirección.'],
+  ex:['λ₁ / (λ₁ + λ₂) = share of the variance explained by PC1','λ₁ / (λ₁ + λ₂) = parte de la varianza explicada por PC1'],
+  trick:['The covariance matrix is symmetric, so its eigenvectors are orthogonal (spectral theorem): the principal axes are perpendicular.','La matriz de covarianza es simétrica, así que sus vectores propios son ortogonales (teorema espectral): los ejes principales son perpendiculares.'],
+  trap:['Center the data (subtract the mean) first. PCA is sensitive to scale, so variables in different units are usually standardized.','Centra los datos (resta la media) primero. PCA depende de la escala, así que las variables con distintas unidades se suelen estandarizar.'],
+  go:{data:1}}];
+const NGROUPS=[['vec','Vectors and rank','Vectores y rango',['Linear combination','Span','Linear independence','Rank','Basis and dimension','Determinant test','Gaussian elimination']],['sys','Systems and subspaces','Sistemas y subespacios',["Cramer's rule",'Rouché–Frobenius theorem','Discussing a system with a parameter','Implicit and parametric equations','Sum, intersection and Grassmann']],['orth','Orthogonality','Ortogonalidad',['Dot product and orthogonality','Orthogonal implies independent','Orthogonal projection','Gram–Schmidt process','Orthonormal basis']],['maps','Linear maps and bases','Aplicaciones lineales y bases',['Linear map and its matrix','Kernel and image','Determinant as a scale factor','Change of basis','Matrix of a map in another basis']],['eig','Eigenvalues','Valores propios',['Eigenvalues and eigenvectors','Characteristic polynomial','Diagonalization']],['data','Data and AI','Datos e IA',['Least squares','Principal component analysis']]];
+let NF=load('nfilter')||'all';
+const GOL={lab:['Try it in the lab →','Pruébalo en el laboratorio →'],gs:['Try it in Gram–Schmidt →','Pruébalo en Gram–Schmidt →'],maps:['Try it in linear maps →','Pruébalo en aplicaciones lineales →'],eig:['Try it in eigenvalues →','Pruébalo en valores propios →'],elim:['Try it in elimination →','Pruébalo en eliminación →'],sys:['Try it in systems →','Pruébalo en sistemas →'],sub:['Try it in subspaces →','Pruébalo en subespacios →'],basis:['Try it in change of basis →','Pruébalo en cambio de base →'],data:['Try it in data and AI →','Pruébalo en datos e IA →']};
+function noteCard(n,i){const k=Object.keys(n.go)[0];return`<article class="note"><div><h3>${T(n.en,n.es)}</h3><div class="alt">${T('ES: '+n.es,'EN: '+n.en)}</div></div><p>${T(...n.def)}</p><div><span class="lbl">${T('Example','Ejemplo')}</span><div class="f">${Array.isArray(n.ex)?T(...n.ex):n.ex}</div></div><p><span class="lbl">${T('Trick','Truco')}</span>${T(...n.trick)}</p><p><span class="lbl">${T('Exam trap','Trampa de examen')}</span>${T(...n.trap)}</p><button class="try" onclick="tryNote(${i})">${T(...GOL[k])}</button></article>`}
+function renderNotes(){$('nfilter').innerHTML=`<button aria-pressed="${NF==='all'}" onclick="NF='all';save('nfilter',NF);renderNotes()">${T('All topics','Todos los temas')}</button>`+NGROUPS.map(([id,en,es])=>`<button aria-pressed="${NF===id}" onclick="NF='${id}';save('nfilter',NF);renderNotes()">${T(en,es)}</button>`).join('');
+ const box=$('notes');box.className='';box.innerHTML=NGROUPS.filter(g=>NF==='all'||g[0]===NF).map(([id,en,es,names])=>{const items=names.map(nm=>NOTES.findIndex(n=>n.en===nm)).filter(i=>i>=0);return`<h2 style="margin:18px 0 10px">${T(en,es)}</h2><div class="notes">${items.map(i=>noteCard(NOTES[i],i)).join('')}</div>`}).join('')}
+function tryNote(i){const g=NOTES[i].go;if(g.lab)loadLab(g.lab[0],g.lab[1],g.lab[2]);else if(g.gs)loadGS(g.gs[0],g.gs[1],g.gs[2]);else if(g.maps)loadMaps(g.maps);else if(g.eig)loadEig(g.eig.map(r=>r.map(String)));else if(g.sys!==undefined)loadSys(SYP[g.sys][2],SYP[g.sys][3]);else if(g.sub!==undefined){const p=SBP[g.sub];loadSub(p[2],p[3],p[4])}else if(g.basis!==undefined){const p=CBP[g.basis];loadCB(p[2],p[3],p[4],p[5])}else if(g.data!==undefined){DP=DPRE[g.data][2].map(p=>p.slice());showTab('data')}else loadElim(g.elim);window.scrollTo({top:0,behavior:'smooth'})}
+
+/* ================= SHELL ================= */
+const TABS=['lab','practice','theory','elimination','sys','sub','basis','gs','maps','eig','data'];let tab='lab';
+function showTab(t){tab=t;TABS.forEach(x=>{$('p-'+x).hidden=x!==t;$('tab-'+x).setAttribute('aria-selected',x===t)});save('tab',t);if(t==='lab')rebuild();if(t==='gs'){gsvg.style.cursor=G.n===3?'grab':'default';drawG()}if(t==='maps')drawMaps();if(t==='basis')drawCB();if(t==='data')drawData()}
+function applyStatic(){document.documentElement.lang=lang;document.querySelectorAll('[data-en]').forEach(el=>el.textContent=el.dataset[lang]);$('len').setAttribute('aria-pressed',lang==='en');$('les').setAttribute('aria-pressed',lang==='es')}
+function setLang(l){lang=l;save('lang',l);applyStatic();buildPresets();rebuild();renderEx();renderChips();buildE();renderE();buildG();renderG();buildMaps();drawMaps();buildEig();computeEig();buildSys();computeSys();buildSub();computeSub();buildCB();computeCB();buildData();drawData();renderScore();renderNotes()}
+(function init(){
+ const s=load('lab');if(s&&s.ST&&s.ST[2]&&s.ST[3]){ST=s.ST;d=s.d===3?3:2;yaw=+s.yaw||-0.6;pitch=+s.pitch||0.4}
+ lang=load('lang')||((navigator.language||'').toLowerCase().startsWith('es')?'es':'en');
+ applyStatic();fillSelects();buildE();computeE(true);fillGSelects();buildG();computeG(true);buildMaps();buildEig();computeEig();buildSys();computeSys();buildSub();computeSub();buildCB();computeCB();buildData();renderNotes();renderChips();renderScore();gen();
+ const h=location.hash.slice(1);showTab(TABS.includes(h)?h:(load('tab')&&TABS.includes(load('tab'))?load('tab'):'lab'));setDim(d);
+})();
+</script>
+
+</body></html>
